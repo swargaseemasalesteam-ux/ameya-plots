@@ -259,9 +259,9 @@
   .with-house-detail-row:last-child { border-bottom:none; }
   .with-house-detail-row span { color:#4a6080; }
   .with-house-detail-row strong { color:#1a3a7b; }
-  .total-house { background:#e8f0fc; }
-  .total-house span { color:#1a3a7b; font-weight:700; font-size:14px; }
-  .total-house strong { color:#1a3a7b; font-size:16px; font-weight:800; }
+  .total-house { background:#1a3a7b; }
+  .total-house span { color:#c8dcff !important; font-weight:700; font-size:13px; }
+  .total-house strong { color:#ffffff !important; font-size:16px; font-weight:800; }
 
   /* ── BOOKING INFO CARD (shown on locked plots) ── */
   .booking-info-card { background:#fff8f0; border:1px solid #f0e0c8; border-radius:12px; padding:14px 16px; margin-bottom:16px; }
@@ -832,14 +832,17 @@ function openDetailModal(id) {
   document.getElementById('dm-add-amt').textContent   = addAmt   ? fmt(addAmt)   : '—';
   document.getElementById('dm-total').textContent     = totalVal ? fmt(totalVal) : '—';
 
-  // With House pricing (from sheet)
-  if (p.housePrice) {
-    document.getElementById('dm-house-price').textContent  = fmt(p.housePrice);
-    document.getElementById('dm-house-sft').textContent    = p.houseSft ? `${p.houseSft} SFT` : '—';
-    document.getElementById('dm-house-section').style.display = 'block';
-  } else {
-    document.getElementById('dm-house-section').style.display = 'none';
-  }
+  // With House pricing — use sheet value, or calculate fallback
+  // Default house: 1200 SFT @ ₹1,800/SFT construction cost
+  const DEFAULT_HOUSE_SFT  = 1200;
+  const DEFAULT_HOUSE_RATE = 1800;
+  const houseSft   = p.houseSft   ? parseFloat(p.houseSft)   : DEFAULT_HOUSE_SFT;
+  const houseConst = houseSft * DEFAULT_HOUSE_RATE;
+  const housePrice = p.housePrice ? p.housePrice : (totalVal + houseConst);
+
+  document.getElementById('dm-house-sft').textContent   = `${houseSft} SFT`;
+  document.getElementById('dm-house-price').textContent = fmt(housePrice);
+  document.getElementById('dm-house-section').style.display = 'block';
 
   // Booking info card (shown only when booked)
   const bookingCard = document.getElementById('dm-booking-info');
