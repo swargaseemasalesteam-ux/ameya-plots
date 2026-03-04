@@ -251,10 +251,17 @@
   .toast.toast-error { background:#c0392b; }
   .toast.toast-info  { background:#2e6da4; }
 
-  /* ── WITH HOUSE ROW ── */
-  .with-house-row { background:#f0f8ff; border-radius:6px; padding:8px 10px !important; margin-top:4px; }
-  .with-house-row .label { color:#1a3a7b; font-weight:600; }
-  .with-house-row .value { color:#1a3a7b; font-weight:700; }
+  /* ── WITH HOUSE SECTION ── */
+  .with-house-section { border-radius:12px; overflow:hidden; margin-bottom:16px; border:2px solid #1a3a7b; }
+  .with-house-header { background:#1a3a7b; color:#fff; font-size:13px; font-weight:700; padding:10px 16px; letter-spacing:0.3px; }
+  .with-house-body { background:#f0f6ff; padding:4px 0; }
+  .with-house-detail-row { display:flex; justify-content:space-between; align-items:center; padding:9px 16px; border-bottom:1px solid #d8e8f8; font-size:13px; }
+  .with-house-detail-row:last-child { border-bottom:none; }
+  .with-house-detail-row span { color:#4a6080; }
+  .with-house-detail-row strong { color:#1a3a7b; }
+  .total-house { background:#e8f0fc; }
+  .total-house span { color:#1a3a7b; font-weight:700; font-size:14px; }
+  .total-house strong { color:#1a3a7b; font-size:16px; font-weight:800; }
 
   /* ── BOOKING INFO CARD (shown on locked plots) ── */
   .booking-info-card { background:#fff8f0; border:1px solid #f0e0c8; border-radius:12px; padding:14px 16px; margin-bottom:16px; }
@@ -451,21 +458,29 @@
           <span class="label">Total Price (Plot Only)</span>
           <span class="value" id="dm-total">—</span>
         </div>
-        <div class="pricing-row with-house-row" id="dm-house-row">
-          <span class="label">🏠 With House Price</span>
-          <span class="value" id="dm-house-price">—</span>
+      </div>
+
+      <!-- With House Section -->
+      <div class="with-house-section" id="dm-house-section" style="display:none;">
+        <div class="with-house-header">🏠 With House Option</div>
+        <div class="with-house-body">
+          <div class="with-house-detail-row">
+            <span>House Size</span>
+            <strong id="dm-house-sft">—</strong>
+          </div>
+          <div class="with-house-detail-row total-house">
+            <span>Total Price (Plot + House)</span>
+            <strong id="dm-house-price">—</strong>
+          </div>
         </div>
-        <div class="pricing-row" id="dm-sft-row">
-          <span class="label">House Size</span>
-          <span class="value" id="dm-house-sft">—</span>
-        </div>
+      </div>
+
       </div>
 
       <!-- Booking info shown when plot is already booked -->
       <div class="booking-info-card" id="dm-booking-info" style="display:none;">
         <div class="booking-info-title">📋 Booking Details</div>
-        <div class="booking-info-row"><span>Buyer</span><strong id="bi-buyer">—</strong></div>
-        <div class="booking-info-row"><span>Phone</span><strong id="bi-phone">—</strong></div>
+        <div class="booking-info-row"><span>Buyer Name</span><strong id="bi-buyer">—</strong></div>
         <div class="booking-info-row"><span>Scheme</span><strong id="bi-scheme">—</strong></div>
         <div class="booking-info-row"><span>House Option</span><strong id="bi-house">—</strong></div>
         <div class="booking-info-row"><span>Sales Person</span><strong id="bi-salesperson">—</strong></div>
@@ -507,11 +522,16 @@
         </div>
       </div>
 
-      <label class="modal-label">BUYER NAME <span style="color:#aaa;font-weight:400;text-transform:none;font-size:11px;">(required)</span></label>
-      <input class="modal-input" id="modal-buyer" type="text" placeholder="Enter buyer name...">
-
-      <label class="modal-label">PHONE NUMBER <span style="color:#aaa;font-weight:400;text-transform:none;font-size:11px;">(required)</span></label>
-      <input class="modal-input" id="modal-phone" type="tel" placeholder="Enter contact number...">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <label class="modal-label">FIRST NAME <span style="color:#aaa;font-weight:400;text-transform:none;font-size:11px;">(required)</span></label>
+          <input class="modal-input" id="modal-firstname" type="text" placeholder="First name...">
+        </div>
+        <div>
+          <label class="modal-label">LAST NAME <span style="color:#aaa;font-weight:400;text-transform:none;font-size:11px;">(required)</span></label>
+          <input class="modal-input" id="modal-lastname" type="text" placeholder="Last name...">
+        </div>
+      </div>
 
       <label class="modal-label">SCHEME</label>
       <select class="modal-input modal-select" id="modal-scheme">
@@ -814,13 +834,11 @@ function openDetailModal(id) {
 
   // With House pricing (from sheet)
   if (p.housePrice) {
-    document.getElementById('dm-house-price').textContent = fmt(p.housePrice);
-    document.getElementById('dm-house-sft').textContent   = p.houseSft ? `${p.houseSft} SFT` : '—';
-    document.getElementById('dm-house-row').style.display = 'flex';
-    document.getElementById('dm-sft-row').style.display   = 'flex';
+    document.getElementById('dm-house-price').textContent  = fmt(p.housePrice);
+    document.getElementById('dm-house-sft').textContent    = p.houseSft ? `${p.houseSft} SFT` : '—';
+    document.getElementById('dm-house-section').style.display = 'block';
   } else {
-    document.getElementById('dm-house-row').style.display = 'none';
-    document.getElementById('dm-sft-row').style.display   = 'none';
+    document.getElementById('dm-house-section').style.display = 'none';
   }
 
   // Booking info card (shown only when booked)
@@ -860,11 +878,11 @@ function openBookingModal() {
 
   selectedStatus = null;
   document.querySelectorAll('.status-opt').forEach(el => el.classList.remove('selected'));
-  document.getElementById('modal-buyer').value      = '';
-  document.getElementById('modal-phone').value      = '';
-  document.getElementById('modal-scheme').value     = '';
-  document.getElementById('modal-house').value      = '';
-  document.getElementById('modal-salesperson').value= '';
+  document.getElementById('modal-firstname').value   = '';
+  document.getElementById('modal-lastname').value    = '';
+  document.getElementById('modal-scheme').value      = '';
+  document.getElementById('modal-house').value       = '';
+  document.getElementById('modal-salesperson').value = '';
   document.getElementById('btn-save').disabled      = false;
   document.getElementById('btn-save').textContent   = 'Save';
 
@@ -893,20 +911,21 @@ async function saveStatus() {
     return;
   }
 
-  const buyer       = document.getElementById('modal-buyer').value.trim();
-  const phone       = document.getElementById('modal-phone').value.trim();
+  const firstName   = document.getElementById('modal-firstname').value.trim();
+  const lastName    = document.getElementById('modal-lastname').value.trim();
+  const buyer       = [firstName, lastName].filter(Boolean).join(' ');
   const scheme      = document.getElementById('modal-scheme').value;
   const houseOption = document.getElementById('modal-house').value;
   const salesperson = document.getElementById('modal-salesperson').value.trim();
 
-  if (!buyer) {
-    showToast('⚠️ Please enter the buyer name.', 'error');
-    document.getElementById('modal-buyer').focus();
+  if (!firstName) {
+    showToast('⚠️ Please enter the first name.', 'error');
+    document.getElementById('modal-firstname').focus();
     return;
   }
-  if (!phone) {
-    showToast('⚠️ Please enter the phone number.', 'error');
-    document.getElementById('modal-phone').focus();
+  if (!lastName) {
+    showToast('⚠️ Please enter the last name.', 'error');
+    document.getElementById('modal-lastname').focus();
     return;
   }
   if (!scheme) {
@@ -930,14 +949,14 @@ async function saveStatus() {
   btn.textContent = 'Saving…';
 
   try {
-    await saveToSheet(currentPlotId, selectedStatus, buyer, phone, scheme, houseOption, salesperson);
+    await saveToSheet(currentPlotId, selectedStatus, buyer, '', scheme, houseOption, salesperson);
 
     // Update local plotDefs so UI reflects change immediately
     const p = getPlotDef(currentPlotId);
     if (p) {
       p.status      = selectedStatus;
       p.buyer       = buyer;
-      p.phone       = phone;
+      p.phone       = '';
       p.scheme      = scheme;
       p.houseOption = houseOption;
       p.salesperson = salesperson;
