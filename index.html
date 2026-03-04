@@ -709,8 +709,7 @@ function renderGrid() {
       ${st === 'sold'     ? '<span class="sold-icon">🏠</span>' : ''}
       ${st === 'reserved' ? '<span class="sold-icon">🔖</span>' : ''}
       <div class="plot-number">${p.id}</div>
-      <div class="plot-size">${p.size} sqyd</div>
-      ${p.buyer ? `<div class="plot-buyer">${p.buyer}</div>` : ''}
+      <div class="plot-size">${p.size} sq.yds</div>
       <div class="plot-status-badge badge-${st}">${st}</div>
     `;
     div.onclick = () => openDetailModal(p.id);
