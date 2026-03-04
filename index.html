@@ -251,6 +251,22 @@
   .toast.toast-error { background:#c0392b; }
   .toast.toast-info  { background:#2e6da4; }
 
+  /* ── WITH HOUSE ROW ── */
+  .with-house-row { background:#f0f8ff; border-radius:6px; padding:8px 10px !important; margin-top:4px; }
+  .with-house-row .label { color:#1a3a7b; font-weight:600; }
+  .with-house-row .value { color:#1a3a7b; font-weight:700; }
+
+  /* ── BOOKING INFO CARD (shown on locked plots) ── */
+  .booking-info-card { background:#fff8f0; border:1px solid #f0e0c8; border-radius:12px; padding:14px 16px; margin-bottom:16px; }
+  .booking-info-title { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--maroon); margin-bottom:10px; }
+  .booking-info-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid #f0e0c8; font-size:13px; }
+  .booking-info-row:last-child { border-bottom:none; }
+  .booking-info-row span { color:var(--text-muted); }
+  .booking-info-row strong { color:var(--text); }
+
+  /* ── SELECT DROPDOWN ── */
+  .modal-select { appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b5240' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; padding-right:36px; cursor:pointer; }
+
   @media (max-width:640px) {
     header { padding:0 14px; min-height:60px; }
     .header-stats { display:none; }
@@ -432,9 +448,27 @@
           <span class="value" id="dm-add-amt">—</span>
         </div>
         <div class="pricing-row total">
-          <span class="label">Total Price</span>
+          <span class="label">Total Price (Plot Only)</span>
           <span class="value" id="dm-total">—</span>
         </div>
+        <div class="pricing-row with-house-row" id="dm-house-row">
+          <span class="label">🏠 With House Price</span>
+          <span class="value" id="dm-house-price">—</span>
+        </div>
+        <div class="pricing-row" id="dm-sft-row">
+          <span class="label">House Size</span>
+          <span class="value" id="dm-house-sft">—</span>
+        </div>
+      </div>
+
+      <!-- Booking info shown when plot is already booked -->
+      <div class="booking-info-card" id="dm-booking-info" style="display:none;">
+        <div class="booking-info-title">📋 Booking Details</div>
+        <div class="booking-info-row"><span>Buyer</span><strong id="bi-buyer">—</strong></div>
+        <div class="booking-info-row"><span>Phone</span><strong id="bi-phone">—</strong></div>
+        <div class="booking-info-row"><span>Scheme</span><strong id="bi-scheme">—</strong></div>
+        <div class="booking-info-row"><span>House Option</span><strong id="bi-house">—</strong></div>
+        <div class="booking-info-row"><span>Sales Person</span><strong id="bi-salesperson">—</strong></div>
       </div>
 
       <!-- Book button (only for available plots) -->
@@ -473,11 +507,28 @@
         </div>
       </div>
 
-      <label class="modal-label">BUYER NAME <span style="color:#aaa;font-weight:400;text-transform:none;font-size:11px;">(required for Reserved/Sold)</span></label>
+      <label class="modal-label">BUYER NAME <span style="color:#aaa;font-weight:400;text-transform:none;font-size:11px;">(required)</span></label>
       <input class="modal-input" id="modal-buyer" type="text" placeholder="Enter buyer name...">
 
-      <label class="modal-label">PHONE NUMBER <span style="color:#aaa;font-weight:400;text-transform:none;font-size:11px;">(required for Reserved/Sold)</span></label>
+      <label class="modal-label">PHONE NUMBER <span style="color:#aaa;font-weight:400;text-transform:none;font-size:11px;">(required)</span></label>
       <input class="modal-input" id="modal-phone" type="tel" placeholder="Enter contact number...">
+
+      <label class="modal-label">SCHEME</label>
+      <select class="modal-input modal-select" id="modal-scheme">
+        <option value="">— Select Scheme —</option>
+        <option value="1 Month Plan">1 Month Plan</option>
+        <option value="Spot Payment Plan">Spot Payment Plan</option>
+      </select>
+
+      <label class="modal-label">HOUSE OPTION</label>
+      <select class="modal-input modal-select" id="modal-house">
+        <option value="">— Select Option —</option>
+        <option value="With House">With House</option>
+        <option value="Without House">Without House</option>
+      </select>
+
+      <label class="modal-label">SALES PERSON NAME <span style="color:#aaa;font-weight:400;text-transform:none;font-size:11px;">(your name)</span></label>
+      <input class="modal-input" id="modal-salesperson" type="text" placeholder="Enter your name...">
 
       <div class="modal-actions">
         <button class="btn-cancel" onclick="closeBookingModal()">Cancel</button>
@@ -538,17 +589,22 @@ async function loadFromSheet() {
 
     // Build plotDefs from every row returned by the sheet
     plotDefs = rows.map(r => ({
-      id:       String(r.plotId),
-      phase:    Number(r.phase)    || 1,
-      size:     r.size             || '—',
-      dims:     r.dims             || '—',
-      facing:   r.facing           || '—',
-      baseRate: Number(r.baseRate) || 0,
-      addRate:  Number(r.addRate)  || 0,
-      total:    Number(r.total)    || 0,
-      status:   (r.status || 'available').toLowerCase(),
-      buyer:    r.buyer  || '',
-      phone:    r.phone  || '',
+      id:           String(r.plotId),
+      phase:        Number(r.phase)      || 1,
+      size:         r.size               || '—',
+      dims:         r.dims               || '—',
+      facing:       r.facing             || '—',
+      baseRate:     Number(r.baseRate)   || 0,
+      addRate:      Number(r.addRate)    || 0,
+      total:        Number(r.total)      || 0,
+      housePrice:   Number(r.housePrice) || 0,
+      houseSft:     r.houseSft           || '',
+      status:       (r.status || 'available').toLowerCase(),
+      buyer:        r.buyer              || '',
+      phone:        r.phone              || '',
+      scheme:       r.scheme             || '',
+      houseOption:  r.houseOption        || '',
+      salesperson:  r.salesperson        || '',
     }));
 
     renderGrid();
@@ -570,10 +626,10 @@ async function loadFromSheet() {
 // ══════════════════════════════════════════════════════════════════════════
 //  GOOGLE SHEETS — SAVE ONE PLOT STATUS
 // ══════════════════════════════════════════════════════════════════════════
-async function saveToSheet(plotId, status, buyer, phone) {
+async function saveToSheet(plotId, status, buyer, phone, scheme, houseOption, salesperson) {
   const res = await fetch(SCRIPT_URL, {
     method: 'POST',
-    body: JSON.stringify({ action: 'update', plotId, status, buyer, phone })
+    body: JSON.stringify({ action: 'update', plotId, status, buyer, phone, scheme, houseOption, salesperson })
   });
   const data = await res.json();
   if (data.result !== 'ok') throw new Error(data.error || 'Unknown error');
@@ -756,6 +812,30 @@ function openDetailModal(id) {
   document.getElementById('dm-add-amt').textContent   = addAmt   ? fmt(addAmt)   : '—';
   document.getElementById('dm-total').textContent     = totalVal ? fmt(totalVal) : '—';
 
+  // With House pricing (from sheet)
+  if (p.housePrice) {
+    document.getElementById('dm-house-price').textContent = fmt(p.housePrice);
+    document.getElementById('dm-house-sft').textContent   = p.houseSft ? `${p.houseSft} SFT` : '—';
+    document.getElementById('dm-house-row').style.display = 'flex';
+    document.getElementById('dm-sft-row').style.display   = 'flex';
+  } else {
+    document.getElementById('dm-house-row').style.display = 'none';
+    document.getElementById('dm-sft-row').style.display   = 'none';
+  }
+
+  // Booking info card (shown only when booked)
+  const bookingCard = document.getElementById('dm-booking-info');
+  if (isLocked && p.buyer) {
+    document.getElementById('bi-buyer').textContent      = p.buyer       || '—';
+    document.getElementById('bi-phone').textContent      = p.phone       || '—';
+    document.getElementById('bi-scheme').textContent     = p.scheme      || '—';
+    document.getElementById('bi-house').textContent      = p.houseOption || '—';
+    document.getElementById('bi-salesperson').textContent= p.salesperson || '—';
+    bookingCard.style.display = 'block';
+  } else {
+    bookingCard.style.display = 'none';
+  }
+
   // Book button — only for available plots
   document.getElementById('dm-book-btn').style.display = isLocked ? 'none' : 'flex';
 
@@ -780,10 +860,13 @@ function openBookingModal() {
 
   selectedStatus = null;
   document.querySelectorAll('.status-opt').forEach(el => el.classList.remove('selected'));
-  document.getElementById('modal-buyer').value    = '';
-  document.getElementById('modal-phone').value    = '';
-  document.getElementById('btn-save').disabled    = false;
-  document.getElementById('btn-save').textContent = 'Save';
+  document.getElementById('modal-buyer').value      = '';
+  document.getElementById('modal-phone').value      = '';
+  document.getElementById('modal-scheme').value     = '';
+  document.getElementById('modal-house').value      = '';
+  document.getElementById('modal-salesperson').value= '';
+  document.getElementById('btn-save').disabled      = false;
+  document.getElementById('btn-save').textContent   = 'Save';
 
   document.getElementById('booking-modal').classList.add('open');
 }
@@ -810,8 +893,11 @@ async function saveStatus() {
     return;
   }
 
-  const buyer = document.getElementById('modal-buyer').value.trim();
-  const phone = document.getElementById('modal-phone').value.trim();
+  const buyer       = document.getElementById('modal-buyer').value.trim();
+  const phone       = document.getElementById('modal-phone').value.trim();
+  const scheme      = document.getElementById('modal-scheme').value;
+  const houseOption = document.getElementById('modal-house').value;
+  const salesperson = document.getElementById('modal-salesperson').value.trim();
 
   if (!buyer) {
     showToast('⚠️ Please enter the buyer name.', 'error');
@@ -823,17 +909,39 @@ async function saveStatus() {
     document.getElementById('modal-phone').focus();
     return;
   }
+  if (!scheme) {
+    showToast('⚠️ Please select a scheme.', 'error');
+    document.getElementById('modal-scheme').focus();
+    return;
+  }
+  if (!houseOption) {
+    showToast('⚠️ Please select With House or Without House.', 'error');
+    document.getElementById('modal-house').focus();
+    return;
+  }
+  if (!salesperson) {
+    showToast('⚠️ Please enter the sales person name.', 'error');
+    document.getElementById('modal-salesperson').focus();
+    return;
+  }
 
   const btn = document.getElementById('btn-save');
   btn.disabled    = true;
   btn.textContent = 'Saving…';
 
   try {
-    await saveToSheet(currentPlotId, selectedStatus, buyer, phone);
+    await saveToSheet(currentPlotId, selectedStatus, buyer, phone, scheme, houseOption, salesperson);
 
     // Update local plotDefs so UI reflects change immediately
     const p = getPlotDef(currentPlotId);
-    if (p) { p.status = selectedStatus; p.buyer = buyer; p.phone = phone; }
+    if (p) {
+      p.status      = selectedStatus;
+      p.buyer       = buyer;
+      p.phone       = phone;
+      p.scheme      = scheme;
+      p.houseOption = houseOption;
+      p.salesperson = salesperson;
+    }
 
     closeBookingModal();
     closeDetailModal();
