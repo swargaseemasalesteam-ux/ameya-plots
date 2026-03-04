@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swargaseema's Ameya – Plot Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --maroon: #7B1A1A;
+    --maroon-light: #9e2020;
+    --gold: #C8973A;
+    --gold-light: #e8b55a;
+    --green: #4a7c3f;
+    --cream: #fdf8f0;
+    --bg: #f5ede0;
+    --text: #2a1a0e;
+    --text-muted: #6b5240;
+    --sold: #c0392b;
+    --available: #27ae60;
+    --reserved: #e67e22;
+    --card-bg: #fff9f0;
+    --phase1: #1a3a7b;
+    --phase2: #7B1A1A;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, var(--maroon) 0%, #4a0e0e 100%);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    position: sticky; top: 0; z-index: 100; min-height: 70px;
+  }
+  .logo-area { display: flex; align-items: center; gap: 14px; }
+  .logo-icon { width: 48px; height: 48px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .logo-text .brand-top { font-size: 10px; font-weight: 500; color: var(--gold-light); letter-spacing: 3px; text-transform: uppercase; }
+  .logo-text .brand-main { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; color: #fff; }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  .header-stats { display: flex; gap: 12px; }
+  .stat-pill { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.12); padding: 6px 14px; border-radius: 20px; color: #fff; font-size: 13px; font-weight: 500; }
+  .stat-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot-available { background: var(--available); }
+  .dot-reserved  { background: var(--reserved); }
+  .dot-sold      { background: var(--sold); }
+  .sync-badge { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.15); padding: 5px 12px; border-radius: 20px; color: #fff; font-size: 12px; font-weight: 500; cursor: pointer; border: none; transition: background 0.2s; }
+  .sync-badge:hover { background: rgba(255,255,255,0.25); }
+  .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #aaa; transition: background 0.3s; }
+  .sync-dot.syncing { background: #ffd700; animation: pulse 1s infinite; }
+  .sync-dot.ok  { background: #4caf50; }
+  .sync-dot.err { background: #f44336; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ── SETUP BANNER ── */
+  .setup-banner { display:none; background:#fff3cd; color:#856404; padding:10px 20px; font-size:13px; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap; }
+  .setup-banner a { color:var(--maroon); font-weight:600; }
+
+  /* ── LOADING ── */
+  .loading-overlay { position:fixed; inset:0; background:rgba(245,237,224,0.92); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:999; gap:14px; }
+  .loading-overlay.hidden { display:none; }
+  .spinner { width:44px; height:44px; border:4px solid rgba(123,26,26,0.2); border-top-color:var(--maroon); border-radius:50%; animation:spin 0.8s linear infinite; }
+  .loading-text { font-size:16px; font-weight:600; color:var(--maroon); }
+  .loading-sub  { font-size:13px; color:var(--text-muted); }
+  @keyframes spin { to{transform:rotate(360deg)} }
+
+  /* ── SUMMARY BAR ── */
+  .summary-bar { display:flex; gap:12px; padding:18px 24px 0; flex-wrap:wrap; }
+  .summary-card { flex:1; min-width:130px; background:#fff; border-radius:14px; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 8px rgba(0,0,0,0.06); border-top:3px solid transparent; }
+  .summary-card.total    { border-top-color:#888; }
+  .summary-card.avail    { border-top-color:var(--available); }
+  .summary-card.reserved { border-top-color:var(--reserved); }
+  .summary-card.sold     { border-top-color:var(--sold); }
+  .summary-label  { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); margin-bottom:4px; }
+  .summary-number { font-size:28px; font-weight:700; font-family:'Playfair Display',serif; color:var(--maroon); }
+
+  .progress-bar-wrap { padding:12px 24px 0; }
+  .progress-bar-label { display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted); margin-bottom:6px; }
+  .progress-bar { height:8px; background:#e8ddd0; border-radius:4px; overflow:hidden; display:flex; }
+  .progress-sold     { height:100%; background:var(--sold);     transition:width 0.6s; }
+  .progress-reserved { height:100%; background:var(--reserved); transition:width 0.6s; }
+
+  /* ── PHASE TABS ── */
+  .phase-tabs { display:flex; gap:0; padding:18px 24px 0; }
+  .phase-tab {
+    flex:1; padding:12px 20px; cursor:pointer; border:none; font-family:'DM Sans',sans-serif;
+    font-size:14px; font-weight:600; transition:all 0.2s;
+    border-radius:0; position:relative;
+  }
+  .phase-tab:first-child { border-radius:12px 0 0 0; }
+  .phase-tab:last-child  { border-radius:0 12px 0 0; }
+  .phase-tab.ph1 { background:#e8eef8; color:var(--phase1); border-bottom:3px solid transparent; }
+  .phase-tab.ph2 { background:#f8e8e8; color:var(--phase2); border-bottom:3px solid transparent; }
+  .phase-tab.ph1.active { background:var(--phase1); color:#fff; border-bottom:3px solid #c8d8f0; }
+  .phase-tab.ph2.active { background:var(--phase2); color:#fff; border-bottom:3px solid var(--gold); }
+  .phase-tab .phase-count { font-size:11px; font-weight:400; opacity:0.8; margin-left:6px; }
+
+  /* ── CONTROLS ── */
+  .controls-bar { display:flex; align-items:center; gap:10px; padding:14px 24px; flex-wrap:wrap; background:rgba(255,255,255,0.5); }
+  .controls-bar h2 { font-family:'Playfair Display',serif; font-size:18px; color:var(--maroon); margin-right:4px; }
+  .filter-btn { padding:7px 16px; border-radius:20px; border:1px solid #ddd; background:#fff; font-size:13px; font-weight:500; cursor:pointer; transition:all 0.2s; color:var(--text-muted); }
+  .filter-btn:hover  { border-color:var(--maroon); color:var(--maroon); }
+  .filter-btn.active { background:var(--maroon); color:#fff; border-color:var(--maroon); }
+  .filter-btn.avail.active  { background:var(--available); border-color:var(--available); }
+  .filter-btn.res.active    { background:var(--reserved);  border-color:var(--reserved); }
+  .filter-btn.sold.active   { background:var(--sold);      border-color:var(--sold); }
+  .search-box { display:flex; align-items:center; gap:8px; background:#fff; border:1px solid #ddd; border-radius:20px; padding:6px 14px; margin-left:auto; }
+  .search-box input { border:none; outline:none; font-size:13px; width:130px; font-family:'DM Sans',sans-serif; }
+
+  /* ── LEGEND ── */
+  .legend { display:flex; align-items:center; gap:16px; padding:0 24px 10px; font-size:12px; color:var(--text-muted); flex-wrap:wrap; }
+  .legend-item { display:flex; align-items:center; gap:5px; }
+  .legend-box  { width:14px; height:14px; border-radius:3px; }
+  .legend-box.av { background:#d4edda; border:1.5px solid var(--available); }
+  .legend-box.re { background:#fff3cd; border:1.5px solid var(--reserved); }
+  .legend-box.so { background:#fde8e8; border:1.5px solid var(--sold); }
+  .legend-lock { margin-left:auto; color:var(--text-muted); font-size:11px; }
+
+  /* ── PLOT GRID ── */
+  .plot-grid-wrapper { padding:0 24px 40px; }
+  .section-title { font-family:'Playfair Display',serif; font-size:15px; color:var(--text-muted); padding:12px 0 10px; letter-spacing:0.3px; }
+  .plot-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(90px,1fr)); gap:8px; }
+
+  .plot-card {
+    background:var(--card-bg); border:1.5px solid #e0d4c4; border-radius:10px;
+    padding:8px 6px; cursor:pointer; transition:all 0.18s;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    position:relative; user-select:none;
+  }
+  .plot-card:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(123,26,26,0.15); border-color:var(--gold); }
+  .plot-card.reserved  { background:#fff8ed; border-color:var(--reserved); }
+  .plot-card.sold      { background:#fde8e8; border-color:var(--sold); opacity:0.85; }
+  .plot-card.hidden    { display:none; }
+  .plot-card.ph1-card  { border-left:3px solid var(--phase1); }
+  .plot-card.ph2-card  { border-left:3px solid var(--phase2); }
+
+  .sold-icon    { font-size:14px; position:absolute; top:4px; right:5px; }
+  .plot-number  { font-size:15px; font-weight:700; color:var(--maroon); font-family:'Playfair Display',serif; }
+  .plot-size    { font-size:10px; color:var(--text-muted); }
+  .plot-buyer   { font-size:9px; color:var(--text-muted); text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; }
+  .plot-status-badge { font-size:9px; font-weight:600; padding:2px 7px; border-radius:8px; text-transform:uppercase; letter-spacing:0.3px; }
+  .badge-available { background:#d4edda; color:#155724; }
+  .badge-reserved  { background:#fff3cd; color:#856404; }
+  .badge-sold      { background:#fde8e8; color:#721c24; }
+
+  /* ── MODAL OVERLAY ── */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; z-index:500; padding:16px; }
+  .modal-overlay.open { display:flex; }
+
+  /* ── DETAIL MODAL (view-only info) ── */
+  .detail-modal {
+    background:#fff; border-radius:20px; width:100%; max-width:480px;
+    max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.25);
+  }
+  .detail-modal-header {
+    background:linear-gradient(135deg, var(--maroon) 0%, #4a0e0e 100%);
+    padding:20px 24px 16px; border-radius:20px 20px 0 0; color:#fff;
+    display:flex; justify-content:space-between; align-items:flex-start;
+  }
+  .detail-modal-header h3 { font-family:'Playfair Display',serif; font-size:22px; }
+  .detail-modal-header .phase-tag { font-size:11px; padding:3px 10px; border-radius:10px; font-weight:600; margin-top:4px; display:inline-block; }
+  .phase-tag.ph1-tag { background:rgba(200,220,255,0.3); color:#c8dcff; }
+  .phase-tag.ph2-tag { background:rgba(255,200,150,0.3); color:#ffc89a; }
+  .detail-close { background:rgba(255,255,255,0.2); border:none; color:#fff; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; }
+
+  .detail-body { padding:20px 24px; }
+
+  /* Plot info grid */
+  .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
+  .info-card { background:var(--cream); border-radius:10px; padding:12px 14px; border:1px solid #e8ddd0; }
+  .info-card-label { font-size:10px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); font-weight:600; margin-bottom:4px; }
+  .info-card-value { font-size:16px; font-weight:700; color:var(--maroon); }
+  .info-card-value.price { font-size:14px; color:var(--text); }
+
+  /* Pricing breakdown table */
+  .pricing-section { background:#fff8f0; border-radius:12px; padding:14px 16px; margin-bottom:16px; border:1px solid #f0e0c8; }
+  .pricing-title { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--maroon); margin-bottom:10px; }
+  .pricing-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #f0e0c8; font-size:13px; }
+  .pricing-row:last-child { border-bottom:none; }
+  .pricing-row.total { font-weight:700; font-size:15px; color:var(--maroon); padding-top:10px; border-top:2px solid var(--gold); border-bottom:none; }
+  .pricing-row .label { color:var(--text-muted); }
+  .pricing-row .value { font-weight:600; color:var(--text); }
+  .pricing-row.total .value { color:var(--maroon); font-size:17px; }
+
+  /* Status indicator in detail view */
+  .current-status-row { display:flex; align-items:center; gap:10px; margin-bottom:16px; padding:10px 14px; border-radius:10px; }
+  .current-status-row.status-available { background:#d4edda; }
+  .current-status-row.status-reserved  { background:#fff3cd; }
+  .current-status-row.status-sold      { background:#fde8e8; }
+  .status-label-big { font-size:14px; font-weight:700; }
+  .status-label-big.available { color:#155724; }
+  .status-label-big.reserved  { color:#856404; }
+  .status-label-big.sold      { color:#721c24; }
+  .status-buyer-info { font-size:12px; color:var(--text-muted); margin-left:auto; text-align:right; }
+
+  /* Locked message */
+  .modal-locked-msg { background:#fff3cd; border:1px solid #ffc107; border-radius:10px; padding:12px 16px; font-size:13px; margin-bottom:16px; color:#664d03; display:none; }
+
+  /* Book button */
+  .btn-book-plot {
+    width:100%; padding:14px; background:linear-gradient(135deg,var(--maroon),#9e2020);
+    color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:700;
+    cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.2s;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .btn-book-plot:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(123,26,26,0.35); }
+  .btn-book-plot:disabled { background:#ccc; cursor:not-allowed; transform:none; box-shadow:none; }
+  .btn-close-detail { width:100%; padding:11px; background:transparent; color:var(--text-muted); border:1.5px solid #ddd; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; margin-top:8px; }
+
+  /* ── BOOKING MODAL (2nd modal layer) ── */
+  .booking-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:600; padding:16px; }
+  .booking-overlay.open { display:flex; }
+  .booking-modal { background:#fff; border-radius:20px; width:100%; max-width:420px; box-shadow:0 20px 60px rgba(0,0,0,0.3); overflow:hidden; }
+  .booking-modal-header { background:linear-gradient(135deg,var(--maroon),#4a0e0e); padding:18px 22px; color:#fff; display:flex; justify-content:space-between; align-items:center; }
+  .booking-modal-header h3 { font-family:'Playfair Display',serif; font-size:19px; }
+  .booking-modal-header .bk-sub { font-size:12px; opacity:0.75; margin-top:2px; }
+  .booking-modal-body { padding:20px 22px; }
+
+  /* Status choice buttons (from the screenshot) */
+  .status-options { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:18px; }
+  .status-opt {
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    padding:14px 10px; border:2px solid #e0d4c4; border-radius:14px;
+    cursor:pointer; transition:all 0.18s; font-size:13px; font-weight:600;
+    background:#fafafa; color:var(--text-muted); user-select:none;
+  }
+  .status-opt:hover:not(.disabled) { border-color:var(--maroon); color:var(--maroon); background:#fff8f0; }
+  .status-opt.selected { border-color:var(--maroon); background:#fff8f0; color:var(--maroon); box-shadow:0 0 0 3px rgba(123,26,26,0.12); }
+  .status-opt.disabled { opacity:0.35; cursor:not-allowed; pointer-events:none; }
+  .status-opt .opt-icon { font-size:26px; }
+  .opt-available.selected { border-color:var(--available); background:#d4edda; color:#155724; box-shadow:0 0 0 3px rgba(39,174,96,0.12); }
+  .opt-reserved.selected  { border-color:var(--reserved); background:#fff3cd; color:#856404; box-shadow:0 0 0 3px rgba(230,126,34,0.12); }
+  .opt-sold.selected      { border-color:var(--sold); background:#fde8e8; color:#721c24; box-shadow:0 0 0 3px rgba(192,57,43,0.12); }
+
+  .modal-label { display:block; font-size:12px; font-weight:700; color:var(--maroon); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; margin-top:14px; }
+  .modal-input { width:100%; padding:11px 14px; border:1.5px solid #e0d4c4; border-radius:10px; font-size:14px; font-family:'DM Sans',sans-serif; background:#fdf8f0; transition:border-color 0.2s; outline:none; }
+  .modal-input:focus { border-color:var(--maroon); background:#fff; }
+  .modal-input:disabled { background:#f5f5f5; color:#aaa; }
+
+  .modal-actions { display:flex; gap:10px; margin-top:20px; }
+  .btn-cancel { flex:1; padding:12px; background:#f5f0ea; color:var(--text-muted); border:none; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; }
+  .btn-save   { flex:2; padding:12px; background:var(--maroon); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.2s; }
+  .btn-save:hover { background:var(--maroon-light); }
+  .btn-save:disabled { background:#ccc; cursor:not-allowed; }
+
+  /* ── TOAST ── */
+  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--maroon); color:#fff; padding:11px 22px; border-radius:30px; font-size:14px; font-weight:500; opacity:0; transition:all 0.3s; pointer-events:none; z-index:999; white-space:nowrap; }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast.toast-error { background:#c0392b; }
+  .toast.toast-info  { background:#2e6da4; }
+
+  @media (max-width:640px) {
+    header { padding:0 14px; min-height:60px; }
+    .header-stats { display:none; }
+    .logo-text .brand-main { font-size:20px; }
+    .summary-bar { padding:12px 14px 0; gap:8px; }
+    .summary-number { font-size:22px; }
+    .controls-bar { padding:10px 14px; }
+    .plot-grid-wrapper { padding:0 14px 30px; }
+    .plot-grid { grid-template-columns:repeat(auto-fill,minmax(76px,1fr)); gap:6px; }
+    .phase-tabs { padding:14px 14px 0; }
+    .info-grid { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text">Loading plot data…</div>
+  <div class="loading-sub">Fetching from Google Sheets</div>
+</div>
+
+<div id="setup-banner" class="setup-banner">
+  ⚠️ <strong>Setup required:</strong> Replace <code>YOUR_SCRIPT_URL_HERE</code> with your Google Apps Script Web App URL.
+  <a href="#" onclick="document.getElementById('setup-banner').style.display='none'">Dismiss</a>
+</div>
+
+<header>
+  <div class="logo-area">
+    <div class="logo-icon">🌿</div>
+    <div class="logo-text">
+      <div class="brand-top">Swargaseema's</div>
+      <div class="brand-main">Ameya</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="header-stats">
+      <div class="stat-pill"><span class="stat-dot dot-available"></span><span id="hdr-avail">0</span> Available</div>
+      <div class="stat-pill"><span class="stat-dot dot-reserved"></span><span id="hdr-res">0</span> Reserved</div>
+      <div class="stat-pill"><span class="stat-dot dot-sold"></span><span id="hdr-sold">0</span> Sold</div>
+    </div>
+    <button class="sync-badge" onclick="loadFromSheet()" title="Refresh from Google Sheets">
+      <span class="sync-dot" id="sync-dot"></span>
+      <span id="sync-label">Refresh</span>
+    </button>
+  </div>
+</header>
+
+<div class="summary-bar">
+  <div class="summary-card total">
+    <div><div class="summary-label">Total Plots</div><div class="summary-number" id="sum-total">399</div></div>
+    <span style="font-size:28px;">🏗️</span>
+  </div>
+  <div class="summary-card avail">
+    <div><div class="summary-label">Available</div><div class="summary-number" id="sum-avail">0</div></div>
+    <span style="font-size:28px;">✅</span>
+  </div>
+  <div class="summary-card reserved">
+    <div><div class="summary-label">Reserved</div><div class="summary-number" id="sum-res">0</div></div>
+    <span style="font-size:28px;">🔖</span>
+  </div>
+  <div class="summary-card sold">
+    <div><div class="summary-label">Sold</div><div class="summary-number" id="sum-sold">0</div></div>
+    <span style="font-size:28px;">🏠</span>
+  </div>
+</div>
+
+<div class="progress-bar-wrap">
+  <div class="progress-bar-label">
+    <span>Sales Progress</span>
+    <span id="progress-pct">0% sold</span>
+  </div>
+  <div class="progress-bar">
+    <div class="progress-sold"     id="progress-sold"     style="width:0%"></div>
+    <div class="progress-reserved" id="progress-reserved" style="width:0%"></div>
+  </div>
+</div>
+
+<!-- Phase Tabs -->
+<div class="phase-tabs">
+  <button class="phase-tab ph1 active" id="tab-ph1" onclick="switchPhase(1)">
+    🔵 Phase 1 <span class="phase-count" id="ph1-count"></span>
+  </button>
+  <button class="phase-tab ph2" id="tab-ph2" onclick="switchPhase(2)">
+    🔴 Phase 2 <span class="phase-count" id="ph2-count"></span>
+  </button>
+</div>
+
+<div class="controls-bar">
+  <h2 id="phase-label">🗺️ Phase 1 — Plots 1–144</h2>
+  <button class="filter-btn all active" onclick="setFilter('all',this)">All</button>
+  <button class="filter-btn avail"      onclick="setFilter('available',this)">Available</button>
+  <button class="filter-btn res"        onclick="setFilter('reserved',this)">Reserved</button>
+  <button class="filter-btn sold"       onclick="setFilter('sold',this)">Sold</button>
+  <div class="search-box">
+    <span>🔍</span>
+    <input type="text" placeholder="Search plot #..." oninput="searchPlot(this.value)">
+  </div>
+</div>
+
+<div class="legend">
+  <span style="font-weight:600;color:var(--maroon);">Legend:</span>
+  <span class="legend-item"><span class="legend-box av"></span> Available</span>
+  <span class="legend-item"><span class="legend-box re"></span> Reserved</span>
+  <span class="legend-item"><span class="legend-box so"></span> Sold</span>
+  <span class="legend-lock">🔒 Locked plots — only office manager can change via Google Sheet</span>
+</div>
+
+<div class="plot-grid-wrapper">
+  <div class="section-title" id="grid-section-title">Phase 1 — 144 Plots</div>
+  <div class="plot-grid" id="plot-grid"></div>
+</div>
+
+<!-- ── DETAIL MODAL ── -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="detail-modal">
+    <div class="detail-modal-header">
+      <div>
+        <h3 id="dm-title">Plot #</h3>
+        <span class="phase-tag" id="dm-phase-tag">Phase 1</span>
+      </div>
+      <button class="detail-close" onclick="closeDetailModal()">✕</button>
+    </div>
+    <div class="detail-body">
+
+      <!-- Current status row -->
+      <div class="current-status-row" id="dm-status-row">
+        <span id="dm-status-icon" style="font-size:20px;"></span>
+        <span class="status-label-big" id="dm-status-label"></span>
+        <div class="status-buyer-info" id="dm-buyer-info"></div>
+      </div>
+
+      <!-- Locked message -->
+      <div class="modal-locked-msg" id="dm-locked-msg">
+        <strong>🔒 This plot is locked.</strong> It is already <span id="dm-locked-word"></span>. Only the office manager can change it by updating the Google Sheet directly.
+      </div>
+
+      <!-- Info grid: size, facing, dimensions -->
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-card-label">Plot Number</div>
+          <div class="info-card-value" id="dm-plot-no">—</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-label">Size</div>
+          <div class="info-card-value" id="dm-size">—</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-label">Dimensions</div>
+          <div class="info-card-value" id="dm-dimensions">—</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-label">Facing</div>
+          <div class="info-card-value" id="dm-facing">—</div>
+        </div>
+      </div>
+
+      <!-- Pricing breakdown -->
+      <div class="pricing-section">
+        <div class="pricing-title">💰 Pricing Breakdown</div>
+        <div class="pricing-row">
+          <span class="label">Base Price (per sq.yd)</span>
+          <span class="value" id="dm-base-rate">—</span>
+        </div>
+        <div class="pricing-row">
+          <span class="label">Plot Size</span>
+          <span class="value" id="dm-size-val">—</span>
+        </div>
+        <div class="pricing-row">
+          <span class="label">Base Amount</span>
+          <span class="value" id="dm-base-amt">—</span>
+        </div>
+        <div class="pricing-row">
+          <span class="label">Additional Charges (per sq.yd)</span>
+          <span class="value" id="dm-add-rate">—</span>
+        </div>
+        <div class="pricing-row">
+          <span class="label">Additional Amount</span>
+          <span class="value" id="dm-add-amt">—</span>
+        </div>
+        <div class="pricing-row total">
+          <span class="label">Total Price</span>
+          <span class="value" id="dm-total">—</span>
+        </div>
+      </div>
+
+      <!-- Book button (only for available plots) -->
+      <button class="btn-book-plot" id="dm-book-btn" onclick="openBookingModal()">
+        📋 Book This Plot
+      </button>
+      <button class="btn-close-detail" onclick="closeDetailModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── BOOKING MODAL ── -->
+<div class="booking-overlay" id="booking-modal">
+  <div class="booking-modal">
+    <div class="booking-modal-header">
+      <div>
+        <h3 id="bk-title">Book Plot #</h3>
+        <div class="bk-sub" id="bk-sub">Select booking status below</div>
+      </div>
+      <button class="detail-close" onclick="closeBookingModal()">✕</button>
+    </div>
+    <div class="booking-modal-body">
+
+      <div class="status-options" id="bk-status-options">
+        <div class="status-opt opt-available disabled" onclick="selectStatus('available')">
+          <div class="opt-icon">✅</div>
+          Available
+        </div>
+        <div class="status-opt opt-reserved" onclick="selectStatus('reserved')">
+          <div class="opt-icon">🔖</div>
+          Reserve
+        </div>
+        <div class="status-opt opt-sold" onclick="selectStatus('sold')">
+          <div class="opt-icon">🏠</div>
+          Sold
+        </div>
+      </div>
+
+      <label class="modal-label">BUYER NAME <span style="color:#aaa;font-weight:400;text-transform:none;font-size:11px;">(required for Reserved/Sold)</span></label>
+      <input class="modal-input" id="modal-buyer" type="text" placeholder="Enter buyer name...">
+
+      <label class="modal-label">PHONE NUMBER <span style="color:#aaa;font-weight:400;text-transform:none;font-size:11px;">(required for Reserved/Sold)</span></label>
+      <input class="modal-input" id="modal-phone" type="tel" placeholder="Enter contact number...">
+
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeBookingModal()">Cancel</button>
+        <button class="btn-save" id="btn-save" onclick="saveStatus()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toast-msg">Saved!</span></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════
+//  ⚙️  CONFIG — paste your Google Apps Script Web App URL here
+// ══════════════════════════════════════════════════════════════════════════
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx58Kc2r0xUBEgq9GOQIBHGx7zp3Xu6ApmsmTuhQy8tW20auecIKYnuTz2hg8I9fJHf/exec';
+
+// ── Runtime state ──────────────────────────────────────────────────────────
+// plotDefs — built entirely from Google Sheet data on first load.
+// Shape: { id, phase, size, dims, facing, baseRate, addRate, total,
+//          status, buyer, phone }
+let plotDefs      = [];          // all plots from sheet
+let currentPhase  = 1;
+let currentFilter = 'all';
+let currentPlotId = null;
+let selectedStatus = null;
+let isLocked       = false;
+
+// ══════════════════════════════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════════════════════════════
+function fmt(n) {
+  if (!n && n !== 0) return '—';
+  return '₹' + Math.round(n).toLocaleString('en-IN');
+}
+
+function getPlotDef(id) {
+  return plotDefs.find(p => p.id === String(id));
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  GOOGLE SHEETS — LOAD ALL DATA
+//  Sheet returns every column including size, dims, facing, rates, total.
+//  plotDefs is built here — zero hardcoding in the HTML.
+// ══════════════════════════════════════════════════════════════════════════
+async function loadFromSheet() {
+  if (SCRIPT_URL === 'YOUR_SCRIPT_URL_HERE') {
+    document.getElementById('setup-banner').style.display = 'flex';
+    document.getElementById('loading-overlay').classList.add('hidden');
+    setSyncStatus('err', 'Not configured');
+    return;
+  }
+
+  setSyncStatus('syncing', 'Loading…');
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?action=getAll`, { cache: 'no-store' });
+    const rows = await res.json();
+
+    // Build plotDefs from every row returned by the sheet
+    plotDefs = rows.map(r => ({
+      id:       String(r.plotId),
+      phase:    Number(r.phase)    || 1,
+      size:     r.size             || '—',
+      dims:     r.dims             || '—',
+      facing:   r.facing           || '—',
+      baseRate: Number(r.baseRate) || 0,
+      addRate:  Number(r.addRate)  || 0,
+      total:    Number(r.total)    || 0,
+      status:   (r.status || 'available').toLowerCase(),
+      buyer:    r.buyer  || '',
+      phone:    r.phone  || '',
+    }));
+
+    renderGrid();
+    setSyncStatus('ok', 'Live');
+    document.getElementById('loading-overlay').classList.add('hidden');
+
+    // Update phase tab labels now we know real counts
+    updatePhaseCounts();
+    updatePhaseLabels();
+
+  } catch (e) {
+    setSyncStatus('err', 'Offline');
+    document.getElementById('loading-overlay').classList.add('hidden');
+    showToast('⚠️ Could not reach Google Sheet. Check connection.', 'error');
+    if (plotDefs.length) renderGrid(); // show stale data if available
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  GOOGLE SHEETS — SAVE ONE PLOT STATUS
+// ══════════════════════════════════════════════════════════════════════════
+async function saveToSheet(plotId, status, buyer, phone) {
+  const res = await fetch(SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'update', plotId, status, buyer, phone })
+  });
+  const data = await res.json();
+  if (data.result !== 'ok') throw new Error(data.error || 'Unknown error');
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  PHASE SWITCHING
+// ══════════════════════════════════════════════════════════════════════════
+function switchPhase(ph) {
+  currentPhase  = ph;
+  currentFilter = 'all';
+
+  document.getElementById('tab-ph1').classList.toggle('active', ph === 1);
+  document.getElementById('tab-ph2').classList.toggle('active', ph === 2);
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.filter-btn.all').classList.add('active');
+  document.querySelector('.search-box input').value = '';
+
+  updatePhaseLabels();
+  renderGrid();
+}
+
+function updatePhaseLabels() {
+  const ph1 = plotDefs.filter(p => p.phase === 1);
+  const ph2 = plotDefs.filter(p => p.phase === 2);
+  const ph1Max = ph1.length ? Math.max(...ph1.map(p => Number(p.id))) : 144;
+  const ph2Max = ph2.length ? Math.max(...ph2.map(p => Number(p.id))) : 399;
+  const ph1Min = ph1.length ? Math.min(...ph1.map(p => Number(p.id))) : 1;
+  const ph2Min = ph2.length ? Math.min(...ph2.map(p => Number(p.id))) : 145;
+
+  if (currentPhase === 1) {
+    document.getElementById('phase-label').textContent        = `🗺️ Phase 1 — Plots ${ph1Min}–${ph1Max}`;
+    document.getElementById('grid-section-title').textContent = `Phase 1 — ${ph1.length} Plots`;
+  } else {
+    document.getElementById('phase-label').textContent        = `🗺️ Phase 2 — Plots ${ph2Min}–${ph2Max}`;
+    document.getElementById('grid-section-title').textContent = `Phase 2 — ${ph2.length} Plots`;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  RENDER GRID
+// ══════════════════════════════════════════════════════════════════════════
+function renderGrid() {
+  const grid = document.getElementById('plot-grid');
+  grid.innerHTML = '';
+
+  const phasePlots = plotDefs.filter(p => p.phase === currentPhase);
+
+  phasePlots.forEach(p => {
+    const st  = p.status;
+    const div = document.createElement('div');
+    div.className  = `plot-card ph${p.phase}-card${st !== 'available' ? ' ' + st : ''}`;
+    div.dataset.id     = p.id;
+    div.dataset.status = st;
+
+    div.innerHTML = `
+      ${st === 'sold'     ? '<span class="sold-icon">🏠</span>' : ''}
+      ${st === 'reserved' ? '<span class="sold-icon">🔖</span>' : ''}
+      <div class="plot-number">${p.id}</div>
+      <div class="plot-size">${p.size} sqyd</div>
+      ${p.buyer ? `<div class="plot-buyer">${p.buyer}</div>` : ''}
+      <div class="plot-status-badge badge-${st}">${st}</div>
+    `;
+    div.onclick = () => openDetailModal(p.id);
+    grid.appendChild(div);
+  });
+
+  applyFilter(currentFilter);
+  updateStats();
+  updatePhaseCounts();
+}
+
+function updatePhaseCounts() {
+  const ph1 = plotDefs.filter(p => p.phase === 1);
+  const ph2 = plotDefs.filter(p => p.phase === 2);
+  document.getElementById('ph1-count').textContent =
+    ph1.length ? `(${ph1.filter(p => p.status === 'available').length} avail)` : '';
+  document.getElementById('ph2-count').textContent =
+    ph2.length ? `(${ph2.filter(p => p.status === 'available').length} avail)` : '';
+}
+
+function updateStats() {
+  let avail = 0, sold = 0, res = 0;
+  plotDefs.forEach(p => {
+    if      (p.status === 'sold')     sold++;
+    else if (p.status === 'reserved') res++;
+    else                              avail++;
+  });
+  const total = plotDefs.length;
+  document.getElementById('sum-total').textContent = total;
+  document.getElementById('sum-avail').textContent = avail;
+  document.getElementById('sum-sold').textContent  = sold;
+  document.getElementById('sum-res').textContent   = res;
+  document.getElementById('hdr-avail').textContent = avail;
+  document.getElementById('hdr-sold').textContent  = sold;
+  document.getElementById('hdr-res').textContent   = res;
+
+  const soldPct = total ? (sold / total * 100).toFixed(1) : 0;
+  const resPct  = total ? (res  / total * 100).toFixed(1) : 0;
+  document.getElementById('progress-sold').style.width     = soldPct + '%';
+  document.getElementById('progress-reserved').style.width = resPct  + '%';
+  document.getElementById('progress-pct').textContent      = `${soldPct}% sold`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  FILTER & SEARCH
+// ══════════════════════════════════════════════════════════════════════════
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilter(f);
+}
+
+function applyFilter(f) {
+  document.querySelectorAll('.plot-card').forEach(card => {
+    card.classList.toggle('hidden', f !== 'all' && card.dataset.status !== f);
+  });
+}
+
+function searchPlot(val) {
+  const q = val.trim();
+  document.querySelectorAll('.plot-card').forEach(card => {
+    if (!q) {
+      card.classList.toggle('hidden', currentFilter !== 'all' && card.dataset.status !== currentFilter);
+    } else {
+      card.classList.toggle('hidden', !card.dataset.id.startsWith(q));
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  DETAIL MODAL — all data read straight from plotDefs (from sheet)
+// ══════════════════════════════════════════════════════════════════════════
+function openDetailModal(id) {
+  currentPlotId = String(id);
+  const p     = getPlotDef(id);
+  if (!p) return;
+
+  isLocked = (p.status === 'reserved' || p.status === 'sold');
+
+  // Header
+  document.getElementById('dm-title').textContent = `Plot #${p.id}`;
+  const phTag = document.getElementById('dm-phase-tag');
+  phTag.textContent = `Phase ${p.phase}`;
+  phTag.className   = `phase-tag ph${p.phase}-tag`;
+
+  // Status row
+  const statusRow = document.getElementById('dm-status-row');
+  statusRow.className = `current-status-row status-${p.status}`;
+  const icons = { available: '✅', reserved: '🔖', sold: '🏠' };
+  document.getElementById('dm-status-icon').textContent = icons[p.status] || '•';
+  const lbl = document.getElementById('dm-status-label');
+  lbl.className   = `status-label-big ${p.status}`;
+  lbl.textContent = p.status.charAt(0).toUpperCase() + p.status.slice(1);
+
+  const buyerInfo = document.getElementById('dm-buyer-info');
+  buyerInfo.innerHTML = p.buyer ? `<strong>${p.buyer}</strong><br>${p.phone}` : '';
+
+  // Locked message
+  document.getElementById('dm-locked-msg').style.display = isLocked ? 'block' : 'none';
+  document.getElementById('dm-locked-word').textContent  = p.status;
+
+  // Info cards — all from sheet
+  document.getElementById('dm-plot-no').textContent    = `#${p.id}`;
+  document.getElementById('dm-size').textContent       = `${p.size} sq.yds`;
+  document.getElementById('dm-dimensions').textContent = p.dims;
+  document.getElementById('dm-facing').textContent     = p.facing;
+
+  // Pricing — all from sheet
+  const baseAmt = p.size !== '—' ? (parseFloat(p.size) * p.baseRate) : 0;
+  const addAmt  = p.size !== '—' ? (parseFloat(p.size) * p.addRate)  : 0;
+  // Use sheet total if available, else calculate
+  const totalVal = p.total || (baseAmt + addAmt);
+
+  document.getElementById('dm-base-rate').textContent = p.baseRate ? fmt(p.baseRate) + ' / sq.yd' : '—';
+  document.getElementById('dm-size-val').textContent  = p.size !== '—' ? `${p.size} sq.yds` : '—';
+  document.getElementById('dm-base-amt').textContent  = baseAmt  ? fmt(baseAmt)  : '—';
+  document.getElementById('dm-add-rate').textContent  = p.addRate ? fmt(p.addRate) + ' / sq.yd' : '—';
+  document.getElementById('dm-add-amt').textContent   = addAmt   ? fmt(addAmt)   : '—';
+  document.getElementById('dm-total').textContent     = totalVal ? fmt(totalVal) : '—';
+
+  // Book button — only for available plots
+  document.getElementById('dm-book-btn').style.display = isLocked ? 'none' : 'flex';
+
+  document.getElementById('detail-modal').classList.add('open');
+}
+
+function closeDetailModal() {
+  document.getElementById('detail-modal').classList.remove('open');
+  currentPlotId = null;
+  isLocked      = false;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  BOOKING MODAL
+// ══════════════════════════════════════════════════════════════════════════
+function openBookingModal() {
+  const p = getPlotDef(currentPlotId);
+  if (!p) return;
+
+  document.getElementById('bk-title').textContent = `Book Plot #${p.id}`;
+  document.getElementById('bk-sub').textContent   = `Phase ${p.phase}  ·  ${p.size} sq.yds  ·  ${p.facing}`;
+
+  selectedStatus = null;
+  document.querySelectorAll('.status-opt').forEach(el => el.classList.remove('selected'));
+  document.getElementById('modal-buyer').value    = '';
+  document.getElementById('modal-phone').value    = '';
+  document.getElementById('btn-save').disabled    = false;
+  document.getElementById('btn-save').textContent = 'Save';
+
+  document.getElementById('booking-modal').classList.add('open');
+}
+
+function closeBookingModal() {
+  document.getElementById('booking-modal').classList.remove('open');
+  selectedStatus = null;
+}
+
+function selectStatus(s) {
+  if (s === 'available') return;
+  selectedStatus = s;
+  document.querySelectorAll('.status-opt').forEach(el => el.classList.remove('selected'));
+  const el = document.querySelector(`.opt-${s}`);
+  if (el) el.classList.add('selected');
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  SAVE
+// ══════════════════════════════════════════════════════════════════════════
+async function saveStatus() {
+  if (!selectedStatus) {
+    showToast('Please select Reserved or Sold first.', 'error');
+    return;
+  }
+
+  const buyer = document.getElementById('modal-buyer').value.trim();
+  const phone = document.getElementById('modal-phone').value.trim();
+
+  if (!buyer) {
+    showToast('⚠️ Please enter the buyer name.', 'error');
+    document.getElementById('modal-buyer').focus();
+    return;
+  }
+  if (!phone) {
+    showToast('⚠️ Please enter the phone number.', 'error');
+    document.getElementById('modal-phone').focus();
+    return;
+  }
+
+  const btn = document.getElementById('btn-save');
+  btn.disabled    = true;
+  btn.textContent = 'Saving…';
+
+  try {
+    await saveToSheet(currentPlotId, selectedStatus, buyer, phone);
+
+    // Update local plotDefs so UI reflects change immediately
+    const p = getPlotDef(currentPlotId);
+    if (p) { p.status = selectedStatus; p.buyer = buyer; p.phone = phone; }
+
+    closeBookingModal();
+    closeDetailModal();
+    renderGrid();
+
+    const msgs = {
+      reserved: `🔖 Plot #${currentPlotId} reserved for ${buyer}`,
+      sold:     `🏠 Plot #${currentPlotId} sold to ${buyer}`
+    };
+    showToast(msgs[selectedStatus] || 'Saved!', 'success');
+  } catch (e) {
+    showToast('❌ Could not save. Check your connection.', 'error');
+    btn.disabled    = false;
+    btn.textContent = 'Save';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  UI HELPERS
+// ══════════════════════════════════════════════════════════════════════════
+function setSyncStatus(state, label) {
+  document.getElementById('sync-dot').className  = `sync-dot ${state}`;
+  document.getElementById('sync-label').textContent = label;
+}
+
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.className = `toast${type === 'error' ? ' toast-error' : type === 'info' ? ' toast-info' : ''}`;
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// Close modals on backdrop click
+document.getElementById('detail-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeDetailModal();
+});
+document.getElementById('booking-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeBookingModal();
+});
+
+// Auto-refresh every 2 minutes
+setInterval(() => { if (SCRIPT_URL !== 'YOUR_SCRIPT_URL_HERE') loadFromSheet(); }, 120000);
+
+loadFromSheet();
+</script>
+</body>
+</html>
