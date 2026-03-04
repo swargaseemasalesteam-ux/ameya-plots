@@ -125,8 +125,8 @@
 
   .plot-card {
     background:var(--card-bg); border:1.5px solid #e0d4c4; border-radius:10px;
-    padding:8px 6px; cursor:pointer; transition:all 0.18s;
-    display:flex; flex-direction:column; align-items:center; gap:3px;
+    padding:10px 6px 8px; cursor:pointer; transition:all 0.18s;
+    display:flex; flex-direction:column; align-items:center; gap:4px;
     position:relative; user-select:none;
   }
   .plot-card:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(123,26,26,0.15); border-color:var(--gold); }
@@ -138,12 +138,12 @@
 
   .sold-icon    { font-size:14px; position:absolute; top:4px; right:5px; }
   .plot-number  { font-size:15px; font-weight:700; color:var(--maroon); font-family:'Playfair Display',serif; }
-  .plot-size    { font-size:10px; color:var(--text-muted); }
+  .plot-size    { font-size:10px; color:var(--text-muted); font-weight:500; }
   .plot-buyer   { font-size:9px; color:var(--text-muted); text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; }
-  .plot-status-badge { font-size:9px; font-weight:600; padding:2px 7px; border-radius:8px; text-transform:uppercase; letter-spacing:0.3px; }
-  .badge-available { background:#d4edda; color:#155724; }
-  .badge-reserved  { background:#fff3cd; color:#856404; }
-  .badge-sold      { background:#fde8e8; color:#721c24; }
+  .plot-status-badge { font-size:10px; font-weight:700; padding:3px 8px; border-radius:6px; text-transform:uppercase; letter-spacing:0.4px; width:100%; text-align:center; margin-top:2px; }
+  .badge-available { background:#27ae60; color:#fff; }
+  .badge-reserved  { background:#e67e22; color:#fff; }
+  .badge-sold      { background:#c0392b; color:#fff; }
 
   /* ── MODAL OVERLAY ── */
   .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; z-index:500; padding:16px; }
