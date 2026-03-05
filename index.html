@@ -683,10 +683,10 @@ function updatePhaseLabels() {
   const safe = (v, fallback) => (isNaN(v) ? fallback : v);
 
   if (currentPhase === 1) {
-    document.getElementById('phase-label').textContent        = `🗺️ Phase 1 — Plots ${safe(ph1Min,1)}–${safe(ph1Max,144)}`;
+    document.getElementById('phase-label').textContent        = `🗺️ Phase 1 — Plots 1–144`;
     document.getElementById('grid-section-title').textContent = `Phase 1 — ${ph1.length || 144} Plots`;
   } else {
-    document.getElementById('phase-label').textContent        = `🗺️ Phase 2 — Plots ${safe(ph2Min,145)}–${safe(ph2Max,399)}`;
+    document.getElementById('phase-label').textContent        = `🗺️ Phase 2 — Plots 1–255`;
     document.getElementById('grid-section-title').textContent = `Phase 2 — ${ph2.length || 255} Plots`;
   }
 }
