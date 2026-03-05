@@ -672,17 +672,22 @@ function switchPhase(ph) {
 function updatePhaseLabels() {
   const ph1 = plotDefs.filter(p => p.phase === 1);
   const ph2 = plotDefs.filter(p => p.phase === 2);
-  const ph1Max = ph1.length ? Math.max(...ph1.map(p => Number(p.id))) : 144;
-  const ph2Max = ph2.length ? Math.max(...ph2.map(p => Number(p.id))) : 399;
+
+  // Use hardcoded fallbacks — never show NaN
   const ph1Min = ph1.length ? Math.min(...ph1.map(p => Number(p.id))) : 1;
+  const ph1Max = ph1.length ? Math.max(...ph1.map(p => Number(p.id))) : 144;
   const ph2Min = ph2.length ? Math.min(...ph2.map(p => Number(p.id))) : 145;
+  const ph2Max = ph2.length ? Math.max(...ph2.map(p => Number(p.id))) : 399;
+
+  // Safety check — if still NaN use fallbacks
+  const safe = (v, fallback) => (isNaN(v) ? fallback : v);
 
   if (currentPhase === 1) {
-    document.getElementById('phase-label').textContent        = `🗺️ Phase 1 — Plots ${ph1Min}–${ph1Max}`;
-    document.getElementById('grid-section-title').textContent = `Phase 1 — ${ph1.length} Plots`;
+    document.getElementById('phase-label').textContent        = `🗺️ Phase 1 — Plots ${safe(ph1Min,1)}–${safe(ph1Max,144)}`;
+    document.getElementById('grid-section-title').textContent = `Phase 1 — ${ph1.length || 144} Plots`;
   } else {
-    document.getElementById('phase-label').textContent        = `🗺️ Phase 2 — Plots ${ph2Min}–${ph2Max}`;
-    document.getElementById('grid-section-title').textContent = `Phase 2 — ${ph2.length} Plots`;
+    document.getElementById('phase-label').textContent        = `🗺️ Phase 2 — Plots ${safe(ph2Min,145)}–${safe(ph2Max,399)}`;
+    document.getElementById('grid-section-title').textContent = `Phase 2 — ${ph2.length || 255} Plots`;
   }
 }
 
