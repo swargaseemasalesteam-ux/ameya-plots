@@ -478,6 +478,7 @@
       <div class="booking-info-card" id="dm-booking-info" style="display:none;">
         <div class="booking-info-title">📋 Booking Details</div>
         <div class="booking-info-row"><span>Buyer Name</span><strong id="bi-buyer">—</strong></div>
+        <div class="booking-info-row"><span>Phone</span><strong id="bi-phone">—</strong></div>
         <div class="booking-info-row"><span>Scheme</span><strong id="bi-scheme">—</strong></div>
         <div class="booking-info-row"><span>House Option</span><strong id="bi-house">—</strong></div>
         <div class="booking-info-row"><span>Sales Person</span><strong id="bi-salesperson">—</strong></div>
@@ -519,16 +520,11 @@
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div>
-          <label class="modal-label">FIRST NAME <span style="color:#aaa;font-weight:400;text-transform:none;font-size:11px;">(required)</span></label>
-          <input class="modal-input" id="modal-firstname" type="text" placeholder="First name...">
-        </div>
-        <div>
-          <label class="modal-label">LAST NAME <span style="color:#aaa;font-weight:400;text-transform:none;font-size:11px;">(required)</span></label>
-          <input class="modal-input" id="modal-lastname" type="text" placeholder="Last name...">
-        </div>
-      </div>
+      <label class="modal-label">NAME <span style="color:#aaa;font-weight:400;text-transform:none;font-size:11px;">(required)</span></label>
+      <input class="modal-input" id="modal-buyer" type="text" placeholder="Enter buyer name...">
+
+      <label class="modal-label">PHONE NUMBER <span style="color:#aaa;font-weight:400;text-transform:none;font-size:11px;">(required)</span></label>
+      <input class="modal-input" id="modal-phone" type="tel" placeholder="Enter phone number...">
 
       <label class="modal-label">SCHEME</label>
       <select class="modal-input modal-select" id="modal-scheme">
@@ -885,8 +881,8 @@ function openBookingModal() {
 
   selectedStatus = null;
   document.querySelectorAll('.status-opt').forEach(el => el.classList.remove('selected'));
-  document.getElementById('modal-firstname').value   = '';
-  document.getElementById('modal-lastname').value    = '';
+  document.getElementById('modal-buyer').value       = '';
+  document.getElementById('modal-phone').value       = '';
   document.getElementById('modal-scheme').value      = '';
   document.getElementById('modal-house').value       = '';
   document.getElementById('modal-salesperson').value = '';
@@ -918,21 +914,20 @@ async function saveStatus() {
     return;
   }
 
-  const firstName   = document.getElementById('modal-firstname').value.trim();
-  const lastName    = document.getElementById('modal-lastname').value.trim();
-  const buyer       = [firstName, lastName].filter(Boolean).join(' ');
+  const buyer       = document.getElementById('modal-buyer').value.trim();
+  const phone       = document.getElementById('modal-phone').value.trim();
   const scheme      = document.getElementById('modal-scheme').value;
   const houseOption = document.getElementById('modal-house').value;
   const salesperson = document.getElementById('modal-salesperson').value.trim();
 
-  if (!firstName) {
-    showToast('⚠️ Please enter the first name.', 'error');
-    document.getElementById('modal-firstname').focus();
+  if (!buyer) {
+    showToast('⚠️ Please enter the buyer name.', 'error');
+    document.getElementById('modal-buyer').focus();
     return;
   }
-  if (!lastName) {
-    showToast('⚠️ Please enter the last name.', 'error');
-    document.getElementById('modal-lastname').focus();
+  if (!phone) {
+    showToast('⚠️ Please enter the phone number.', 'error');
+    document.getElementById('modal-phone').focus();
     return;
   }
   if (!scheme) {
@@ -956,14 +951,14 @@ async function saveStatus() {
   btn.textContent = 'Saving…';
 
   try {
-    await saveToSheet(currentPlotId, selectedStatus, buyer, '', scheme, houseOption, salesperson);
+    await saveToSheet(currentPlotId, selectedStatus, buyer, phone, scheme, houseOption, salesperson);
 
     // Update local plotDefs so UI reflects change immediately
     const p = getPlotDef(currentPlotId);
     if (p) {
       p.status      = selectedStatus;
       p.buyer       = buyer;
-      p.phone       = '';
+      p.phone       = phone;
       p.scheme      = scheme;
       p.houseOption = houseOption;
       p.salesperson = salesperson;
