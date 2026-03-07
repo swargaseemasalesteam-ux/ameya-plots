@@ -479,6 +479,7 @@
         <div class="booking-info-title">📋 Booking Details</div>
         <div class="booking-info-row"><span>Buyer Name</span><strong id="bi-buyer">—</strong></div>
         <div class="booking-info-row"><span>Phone</span><strong id="bi-phone">—</strong></div>
+        <div class="booking-info-row"><span>Booking Date</span><strong id="bi-date">—</strong></div>
         <div class="booking-info-row"><span>Scheme</span><strong id="bi-scheme">—</strong></div>
         <div class="booking-info-row"><span>House Option</span><strong id="bi-house">—</strong></div>
         <div class="booking-info-row"><span>Sales Person</span><strong id="bi-salesperson">—</strong></div>
@@ -525,6 +526,9 @@
 
       <label class="modal-label">PHONE NUMBER <span style="color:#aaa;font-weight:400;text-transform:none;font-size:11px;">(required)</span></label>
       <input class="modal-input" id="modal-phone" type="tel" placeholder="Enter phone number...">
+
+      <label class="modal-label">BOOKING DATE <span style="color:#aaa;font-weight:400;text-transform:none;font-size:11px;">(required)</span></label>
+      <input class="modal-input" id="modal-date" type="date">
 
       <label class="modal-label">SCHEME</label>
       <select class="modal-input modal-select" id="modal-scheme">
@@ -639,10 +643,10 @@ async function loadFromSheet() {
 // ══════════════════════════════════════════════════════════════════════════
 //  GOOGLE SHEETS — SAVE ONE PLOT STATUS
 // ══════════════════════════════════════════════════════════════════════════
-async function saveToSheet(plotId, status, buyer, phone, scheme, houseOption, salesperson) {
+async function saveToSheet(plotId, status, buyer, phone, bookingDate, scheme, houseOption, salesperson) {
   // Use GET with URL params — avoids CORS preflight issues with Google Apps Script
   const params = new URLSearchParams({
-    action: 'update', plotId, status, buyer, phone, scheme, houseOption, salesperson
+    action: 'update', plotId, status, buyer, phone, bookingDate, scheme, houseOption, salesperson
   });
   const res  = await fetch(`${SCRIPT_URL}?${params.toString()}`, { cache: 'no-store' });
   const data = await res.json();
@@ -850,6 +854,7 @@ function openDetailModal(id) {
   if (isLocked && p.buyer) {
     document.getElementById('bi-buyer').textContent      = p.buyer       || '—';
     document.getElementById('bi-phone').textContent      = p.phone       || '—';
+    document.getElementById('bi-date').textContent       = p.bookingDate ? new Date(p.bookingDate).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) : '—';
     document.getElementById('bi-scheme').textContent     = p.scheme      || '—';
     document.getElementById('bi-house').textContent      = p.houseOption || '—';
     document.getElementById('bi-salesperson').textContent= p.salesperson || '—';
@@ -884,6 +889,8 @@ function openBookingModal() {
   document.querySelectorAll('.status-opt').forEach(el => el.classList.remove('selected'));
   document.getElementById('modal-buyer').value       = '';
   document.getElementById('modal-phone').value       = '';
+  // Set today's date as default
+  document.getElementById('modal-date').value        = new Date().toISOString().split('T')[0];
   document.getElementById('modal-scheme').value      = '';
   document.getElementById('modal-house').value       = '';
   document.getElementById('modal-salesperson').value = '';
@@ -917,6 +924,7 @@ async function saveStatus() {
 
   const buyer       = document.getElementById('modal-buyer').value.trim();
   const phone       = document.getElementById('modal-phone').value.trim();
+  const bookingDate = document.getElementById('modal-date').value;
   const scheme      = document.getElementById('modal-scheme').value;
   const houseOption = document.getElementById('modal-house').value;
   const salesperson = document.getElementById('modal-salesperson').value.trim();
@@ -929,6 +937,11 @@ async function saveStatus() {
   if (!phone) {
     showToast('⚠️ Please enter the phone number.', 'error');
     document.getElementById('modal-phone').focus();
+    return;
+  }
+  if (!bookingDate) {
+    showToast('⚠️ Please select a booking date.', 'error');
+    document.getElementById('modal-date').focus();
     return;
   }
   if (!scheme) {
@@ -952,7 +965,7 @@ async function saveStatus() {
   btn.textContent = 'Saving…';
 
   try {
-    await saveToSheet(currentPlotId, selectedStatus, buyer, phone, scheme, houseOption, salesperson);
+    await saveToSheet(currentPlotId, selectedStatus, buyer, phone, bookingDate, scheme, houseOption, salesperson);
 
     // Update local plotDefs so UI reflects change immediately
     const p = getPlotDef(currentPlotId);
@@ -960,6 +973,7 @@ async function saveStatus() {
       p.status      = selectedStatus;
       p.buyer       = buyer;
       p.phone       = phone;
+      p.bookingDate = bookingDate;
       p.scheme      = scheme;
       p.houseOption = houseOption;
       p.salesperson = salesperson;
