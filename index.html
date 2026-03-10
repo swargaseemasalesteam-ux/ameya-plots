@@ -642,7 +642,7 @@
 // ══════════════════════════════════════════════════════════════════════════
 //  ⚙️  CONFIG — paste your Google Apps Script Web App URL here
 // ══════════════════════════════════════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyzI7to-BxbK9Dqe2v-Ljhhx3da8lzTAgTTt_J2VuN3LEQjdjvAmo_pFWgypagwK58f/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxKPHX6MnCC9kkBxcELS_FZDOi9CretLYqpg4oZ4nOiMDJKce2sv14HMpdMXDD4lvu6/exec';
 
 // ── Runtime state ──────────────────────────────────────────────────────────
 // plotDefs — built entirely from Google Sheet data on first load.
@@ -714,7 +714,8 @@ async function loadFromSheet() {
     updatePhaseLabels();
 
     // Detect status changes for Today's Updates
-    detectChanges(plotDefs);
+    // Load today's activity log from sheet
+    loadTodaysLog();
 
   } catch (e) {
     setSyncStatus('err', 'Offline');
@@ -1070,6 +1071,9 @@ async function saveStatus() {
     closeDetailModal();
     renderGrid();
 
+    // Refresh activity log after save
+    loadTodaysLog();
+
     const msgs = {
       reserved: `🔖 Plot #${currentPlotId} reserved for ${buyer}`,
       sold:     `🏠 Plot #${currentPlotId} sold to ${buyer}`
@@ -1112,41 +1116,22 @@ setInterval(() => { if (SCRIPT_URL !== 'YOUR_SCRIPT_URL_HERE') loadFromSheet(); 
 loadFromSheet();
 
 // ══════════════════════════════════════════════════════════════════════════
-//  TODAY'S UPDATES — activity log stored in memory, built from sheet data
+//  TODAY'S UPDATES — fetched from Activity Log sheet
 // ══════════════════════════════════════════════════════════════════════════
-let todaysLog        = [];   // array of { plotId, phase, status, buyer, phone, salesperson, time }
-let prevSnapshot     = {};   // plotId -> status (from last refresh)
+let todaysLog        = [];
 let updatesFilter    = 'all';
 let updatesPanelOpen = false;
 
-// Call this after every loadFromSheet() succeeds — compare new vs old
-function detectChanges(newPlots) {
-  const todayStr = new Date().toDateString();
-  // On first load just store snapshot, no changes to report
-  const isFirstLoad = Object.keys(prevSnapshot).length === 0;
-  newPlots.forEach(p => {
-    const oldStatus = prevSnapshot[p.id];
-    if (!isFirstLoad && oldStatus && oldStatus !== p.status) {
-      const now  = new Date();
-      const hhmm = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
-      todaysLog.unshift({
-        plotId     : p.id,
-        phase      : p.phase,
-        status     : (p.status || 'available').toLowerCase(),
-        buyer      : p.buyer      || '',
-        phone      : p.phone      || '',
-        salesperson: p.salesperson|| '',
-        bookingDate: p.bookingDate|| '',
-        time       : hhmm,
-        dateStr    : todayStr
-      });
+async function loadTodaysLog() {
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?action=getLog`, { cache: 'no-store' });
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      todaysLog = data;
+      refreshUpdatesBadge();
+      if (updatesPanelOpen) renderUpdatesFeed(updatesFilter);
     }
-    prevSnapshot[p.id] = p.status;
-  });
-  // Keep only today's entries
-  todaysLog = todaysLog.filter(e => e.dateStr === todayStr);
-  refreshUpdatesBadge();
-  if (updatesPanelOpen) renderUpdatesFeed(updatesFilter);
+  } catch(e) { /* silently ignore log fetch errors */ }
 }
 
 function refreshUpdatesBadge() {
