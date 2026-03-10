@@ -49,6 +49,58 @@
   .dot-sold      { background: var(--sold); }
   .sync-badge { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.15); padding: 5px 12px; border-radius: 20px; color: #fff; font-size: 12px; font-weight: 500; cursor: pointer; border: none; transition: background 0.2s; }
   .sync-badge:hover { background: rgba(255,255,255,0.25); }
+
+  /* ── TODAY'S UPDATES BUTTON ── */
+  .updates-btn { position: relative; display: flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.15); border: none; color: #fff; padding: 5px 13px; border-radius: 20px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; transition: background 0.2s; }
+  .updates-btn:hover { background: rgba(255,255,255,0.28); }
+  .updates-count { background: #e74c3c; color: #fff; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; min-width: 18px; text-align: center; display: none; animation: badgePulse 2s infinite; }
+  .updates-count.show { display: inline-block; }
+  @keyframes badgePulse { 0%,100%{ box-shadow:0 0 0 0 rgba(231,76,60,0.5); } 60%{ box-shadow:0 0 0 5px rgba(231,76,60,0); } }
+
+  /* ── PANEL OVERLAY ── */
+  .upanel-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: none; z-index: 900; backdrop-filter: blur(2px); }
+  .upanel-overlay.open { display: block; }
+
+  /* ── SLIDE PANEL ── */
+  .updates-panel { position: fixed; right: 0; top: 0; bottom: 0; width: 370px; background: #fff; box-shadow: -6px 0 30px rgba(0,0,0,0.18); display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s ease; z-index: 901; }
+  .updates-panel.open { transform: translateX(0); }
+  .upanel-head { background: linear-gradient(135deg,#7B1A1A,#4a0e0e); padding: 18px 18px 14px; color: #fff; display: flex; justify-content: space-between; align-items: flex-start; }
+  .upanel-head h3 { font-family: 'Playfair Display', serif; font-size: 18px; margin: 0; }
+  .upanel-head p { font-size: 11px; opacity: 0.7; margin: 3px 0 0; }
+  .upanel-close { background: rgba(255,255,255,0.2); border: none; color: #fff; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .upanel-stats { display: flex; border-bottom: 1px solid #f0e8e0; }
+  .upstat { flex: 1; padding: 10px 6px; text-align: center; border-right: 1px solid #f0e8e0; }
+  .upstat:last-child { border-right: none; }
+  .upstat-n { font-size: 20px; font-weight: 700; font-family: 'Playfair Display', serif; }
+  .upstat-l { font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; color: #999; margin-top: 2px; }
+  .upstat.s-sold .upstat-n { color: #c0392b; }
+  .upstat.s-res .upstat-n { color: #e67e22; }
+  .upstat.s-avl .upstat-n { color: #27ae60; }
+  .upanel-filters { display: flex; gap: 5px; padding: 10px 14px; border-bottom: 1px solid #f0e8e0; background: #fdf8f0; flex-wrap: wrap; }
+  .upf-btn { padding: 4px 11px; border-radius: 12px; border: 1px solid #ddd; background: #fff; font-size: 11px; font-weight: 600; cursor: pointer; color: #888; transition: all 0.15s; }
+  .upf-btn.active { background: #7B1A1A; color: #fff; border-color: #7B1A1A; }
+  .upf-btn.f-sold.active { background: #c0392b; border-color: #c0392b; }
+  .upf-btn.f-res.active { background: #e67e22; border-color: #e67e22; }
+  .upf-btn.f-avl.active { background: #27ae60; border-color: #27ae60; }
+  .upanel-feed { flex: 1; overflow-y: auto; padding: 10px 14px; }
+  .feed-item { display: flex; gap: 10px; padding: 10px 12px; border-radius: 10px; margin-bottom: 7px; border: 1px solid transparent; transition: transform 0.12s; }
+  .feed-item:hover { transform: translateX(2px); }
+  .feed-item.fi-sold { background: #fdf0f0; border-color: #f5c6c6; }
+  .feed-item.fi-reserved { background: #fffbf0; border-color: #fde8a0; }
+  .feed-item.fi-available { background: #f0fdf4; border-color: #b8f0cc; }
+  .fi-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+  .fi-body { flex: 1; min-width: 0; }
+  .fi-title { font-size: 13px; font-weight: 700; color: #2a1a0e; }
+  .fi-status { font-weight: 700; }
+  .fi-status.st-sold { color: #c0392b; }
+  .fi-status.st-reserved { color: #e67e22; }
+  .fi-status.st-available { color: #27ae60; }
+  .fi-sub { font-size: 11px; color: #777; margin-top: 2px; }
+  .fi-meta { font-size: 10px; color: #aaa; margin-top: 3px; }
+  .fi-time { font-size: 10px; color: #bbb; flex-shrink: 0; margin-top: 3px; white-space: nowrap; }
+  .upanel-empty { text-align: center; padding: 40px 20px; color: #bbb; }
+  .upanel-empty .ei { font-size: 44px; margin-bottom: 10px; }
+  .upanel-footer { padding: 8px 14px; border-top: 1px solid #f0e8e0; font-size: 10px; color: #bbb; text-align: center; background: #fdf8f0; }
   .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #aaa; transition: background 0.3s; }
   .sync-dot.syncing { background: #ffd700; animation: pulse 1s infinite; }
   .sync-dot.ok  { background: #4caf50; }
@@ -312,12 +364,41 @@
       <div class="stat-pill"><span class="stat-dot dot-reserved"></span><span id="hdr-res">0</span> Reserved</div>
       <div class="stat-pill"><span class="stat-dot dot-sold"></span><span id="hdr-sold">0</span> Sold</div>
     </div>
+    <button class="updates-btn" onclick="toggleUpdatesPanel()" title="Today's Updates">
+      📋 Today's Updates
+      <span class="updates-count" id="updates-count">0</span>
+    </button>
     <button class="sync-badge" onclick="loadFromSheet()" title="Refresh from Google Sheets">
       <span class="sync-dot" id="sync-dot"></span>
       <span id="sync-label">Refresh</span>
     </button>
   </div>
 </header>
+
+<!-- TODAY'S UPDATES PANEL -->
+<div class="upanel-overlay" id="upanel-overlay" onclick="toggleUpdatesPanel()"></div>
+<div class="updates-panel" id="updates-panel">
+  <div class="upanel-head">
+    <div>
+      <h3>📋 Today's Updates</h3>
+      <p id="upanel-date"></p>
+    </div>
+    <button class="upanel-close" onclick="toggleUpdatesPanel()">✕</button>
+  </div>
+  <div class="upanel-stats">
+    <div class="upstat s-sold"><div class="upstat-n" id="ups-sold">0</div><div class="upstat-l">Sold</div></div>
+    <div class="upstat s-res"><div class="upstat-n" id="ups-res">0</div><div class="upstat-l">Reserved</div></div>
+    <div class="upstat s-avl"><div class="upstat-n" id="ups-avl">0</div><div class="upstat-l">Released</div></div>
+  </div>
+  <div class="upanel-filters">
+    <button class="upf-btn active" onclick="filterUpdates('all',this)">All</button>
+    <button class="upf-btn f-sold" onclick="filterUpdates('sold',this)">🏠 Sold</button>
+    <button class="upf-btn f-res" onclick="filterUpdates('reserved',this)">🔖 Reserved</button>
+    <button class="upf-btn f-avl" onclick="filterUpdates('available',this)">✅ Released</button>
+  </div>
+  <div class="upanel-feed" id="upanel-feed"></div>
+  <div class="upanel-footer">🔄 Auto-refreshes every 2 minutes</div>
+</div>
 
 <div class="summary-bar">
   <div class="summary-card total">
@@ -632,6 +713,9 @@ async function loadFromSheet() {
     updatePhaseCounts();
     updatePhaseLabels();
 
+    // Detect status changes for Today's Updates
+    detectChanges(plotDefs);
+
   } catch (e) {
     setSyncStatus('err', 'Offline');
     document.getElementById('loading-overlay').classList.add('hidden');
@@ -714,7 +798,7 @@ function renderGrid() {
     div.innerHTML = `
       ${st === 'sold'     ? '<span class="sold-icon">🏠</span>' : ''}
       ${st === 'reserved' ? '<span class="sold-icon">🔖</span>' : ''}
-      <div class="plot-number">${p.id}</div>
+      <div class="plot-number">${p.id.replace('(P2) ','')}</div>
       <div class="plot-size">${sizeDisplay}</div>
       <div class="plot-status-badge badge-${st}">${st}</div>
     `;
@@ -825,17 +909,20 @@ function openDetailModal(id) {
   document.getElementById('dm-facing').textContent     = p.facing;
 
   // Pricing — all from sheet
-  const baseAmt = p.size !== '—' ? (parseFloat(p.size) * p.baseRate) : 0;
-  const addAmt  = p.size !== '—' ? (parseFloat(p.size) * p.addRate)  : 0;
+  // Use values directly from sheet — sheet already has correct pre-calculated prices
+  const sizeNum  = parseFloat(p.size)    || 0;
+  const addRate  = p.addRate             || 0;
+  const baseAmt  = sizeNum ? Math.round(sizeNum * p.baseRate) : 0;
+  const addAmt   = sizeNum ? Math.round(sizeNum * addRate)    : 0;
   // Use sheet total if available, else calculate
   const totalVal = p.total || (baseAmt + addAmt);
 
   document.getElementById('dm-base-rate').textContent = p.baseRate ? fmt(p.baseRate) + ' / sq.yd' : '—';
-  document.getElementById('dm-size-val').textContent  = p.size !== '—' ? `${p.size} sq.yds` : '—';
-  document.getElementById('dm-base-amt').textContent  = baseAmt  ? fmt(baseAmt)  : '—';
-  document.getElementById('dm-add-rate').textContent  = p.addRate ? fmt(p.addRate) + ' / sq.yd' : '—';
-  document.getElementById('dm-add-amt').textContent   = addAmt   ? fmt(addAmt)   : '—';
-  document.getElementById('dm-total').textContent     = totalVal ? fmt(totalVal) : '—';
+  document.getElementById('dm-size-val').textContent  = sizeNum    ? `${p.size} sq.yds`           : '—';
+  document.getElementById('dm-base-amt').textContent  = baseAmt    ? fmt(baseAmt)                  : '—';
+  document.getElementById('dm-add-rate').textContent  = addRate    ? fmt(addRate) + ' / sq.yd'     : '—';
+  document.getElementById('dm-add-amt').textContent   = addAmt     ? fmt(addAmt)                   : '—';
+  document.getElementById('dm-total').textContent     = totalVal   ? fmt(totalVal)                 : '—';
 
   // With House pricing — use sheet value, or calculate fallback
   // Default house: 1200 SFT @ ₹1,800/SFT construction cost
@@ -1023,6 +1110,100 @@ document.getElementById('booking-modal').addEventListener('click', function(e) {
 setInterval(() => { if (SCRIPT_URL !== 'YOUR_SCRIPT_URL_HERE') loadFromSheet(); }, 120000);
 
 loadFromSheet();
+
+// ══════════════════════════════════════════════════════════════════════════
+//  TODAY'S UPDATES — activity log stored in memory, built from sheet data
+// ══════════════════════════════════════════════════════════════════════════
+let todaysLog        = [];   // array of { plotId, phase, status, buyer, phone, salesperson, time }
+let prevSnapshot     = {};   // plotId -> status (from last refresh)
+let updatesFilter    = 'all';
+let updatesPanelOpen = false;
+
+// Call this after every loadFromSheet() succeeds — compare new vs old
+function detectChanges(newPlots) {
+  const todayStr = new Date().toDateString();
+  // On first load just store snapshot, no changes to report
+  const isFirstLoad = Object.keys(prevSnapshot).length === 0;
+  newPlots.forEach(p => {
+    const oldStatus = prevSnapshot[p.id];
+    if (!isFirstLoad && oldStatus && oldStatus !== p.status) {
+      const now  = new Date();
+      const hhmm = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+      todaysLog.unshift({
+        plotId     : p.id,
+        phase      : p.phase,
+        status     : (p.status || 'available').toLowerCase(),
+        buyer      : p.buyer      || '',
+        phone      : p.phone      || '',
+        salesperson: p.salesperson|| '',
+        bookingDate: p.bookingDate|| '',
+        time       : hhmm,
+        dateStr    : todayStr
+      });
+    }
+    prevSnapshot[p.id] = p.status;
+  });
+  // Keep only today's entries
+  todaysLog = todaysLog.filter(e => e.dateStr === todayStr);
+  refreshUpdatesBadge();
+  if (updatesPanelOpen) renderUpdatesFeed(updatesFilter);
+}
+
+function refreshUpdatesBadge() {
+  const count = todaysLog.length;
+  const badge = document.getElementById('updates-count');
+  badge.textContent = count;
+  badge.classList.toggle('show', count > 0);
+}
+
+function toggleUpdatesPanel() {
+  updatesPanelOpen = !updatesPanelOpen;
+  document.getElementById('updates-panel').classList.toggle('open', updatesPanelOpen);
+  document.getElementById('upanel-overlay').classList.toggle('open', updatesPanelOpen);
+  if (updatesPanelOpen) {
+    // Set date label
+    const d = new Date();
+    document.getElementById('upanel-date').textContent =
+      d.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    renderUpdatesFeed(updatesFilter);
+  }
+}
+
+function filterUpdates(f, btn) {
+  updatesFilter = f;
+  document.querySelectorAll('.upf-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderUpdatesFeed(f);
+}
+
+function renderUpdatesFeed(filter) {
+  const items = filter === 'all' ? todaysLog : todaysLog.filter(e => e.status === filter);
+
+  // Update mini stats
+  document.getElementById('ups-sold').textContent = todaysLog.filter(e=>e.status==='sold').length;
+  document.getElementById('ups-res').textContent  = todaysLog.filter(e=>e.status==='reserved').length;
+  document.getElementById('ups-avl').textContent  = todaysLog.filter(e=>e.status==='available').length;
+
+  const feed = document.getElementById('upanel-feed');
+  if (!items.length) {
+    feed.innerHTML = `<div class="upanel-empty"><div class="ei">📭</div><p>No ${filter==='all'?'':filter+' '}updates today</p></div>`;
+    return;
+  }
+  const icons  = { sold:'🏠', reserved:'🔖', available:'✅' };
+  const labels = { sold:'Sold', reserved:'Reserved', available:'Released to Available' };
+  feed.innerHTML = items.map(e => {
+    const displayId = e.phase === 2 ? e.plotId - 144 : e.plotId;
+    return `<div class="feed-item fi-${e.status}">
+      <div class="fi-icon">${icons[e.status]||'📋'}</div>
+      <div class="fi-body">
+        <div class="fi-title">Plot #${displayId} <span style="color:#aaa;font-weight:400">→</span> <span class="fi-status st-${e.status}">${labels[e.status]||e.status}</span></div>
+        ${e.buyer ? `<div class="fi-sub">👤 ${e.buyer}${e.phone?' &nbsp;·&nbsp; 📞 '+e.phone:''}</div>`:''}
+        <div class="fi-meta">${e.salesperson?'👨‍💼 '+e.salesperson+' &nbsp;·&nbsp; ':''} Phase ${e.phase}</div>
+      </div>
+      <div class="fi-time">🕐 ${e.time}</div>
+    </div>`;
+  }).join('');
+}
 </script>
 </body>
 </html>
