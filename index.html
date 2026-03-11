@@ -645,7 +645,7 @@
 // ══════════════════════════════════════════════════════════════════════════
 //  ⚙️  CONFIG — paste your Google Apps Script Web App URL here
 // ══════════════════════════════════════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxnOUus6nhBJT041C_XrxdCExnlVdg4uJ0_XvXTmdckcyFnG3jF93nJkfQFROSiMtKJ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzFpFh_YGDLK5gyw5ZItKICHTEDJTTGrqyUaOIGGNYCARVm42TfCP-RZ2dtfbk-73dn/exec';
 
 // ── Runtime state ──────────────────────────────────────────────────────────
 // plotDefs — built entirely from Google Sheet data on first load.
@@ -739,6 +739,8 @@ async function saveToSheet(plotId, status, buyer, phone, bookingDate, scheme, ho
   const res  = await fetch(`${SCRIPT_URL}?${params.toString()}`, { cache: 'no-store' });
   const data = await res.json();
   if (data.result !== 'ok') throw new Error(data.error || 'Unknown error');
+  if (data.logError) console.warn('[Activity Log error]', data.logError);
+  return data;
 }
 
 // ══════════════════════════════════════════════════════════════════════════
