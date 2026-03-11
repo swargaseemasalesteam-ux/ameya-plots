@@ -629,7 +629,18 @@
       </select>
 
       <label class="modal-label">SALES PERSON NAME <span style="color:#aaa;font-weight:400;text-transform:none;font-size:11px;">(your name)</span></label>
-      <input class="modal-input" id="modal-salesperson" type="text" placeholder="Enter your name...">
+      <select class="modal-input modal-select" id="modal-salesperson-select" onchange="handleSalespersonSelect(this.value)">
+        <option value="">— Select Sales Person —</option>
+        <option value="Bhanu">Bhanu</option>
+        <option value="Mohan">Mohan</option>
+        <option value="Ramesh">Ramesh</option>
+        <option value="Venu">Venu</option>
+        <option value="Praveen">Praveen</option>
+        <option value="Mahesh">Mahesh</option>
+        <option value="Narsi Reddy">Narsi Reddy</option>
+        <option value="__other__">Other (type name below)</option>
+      </select>
+      <input class="modal-input" id="modal-salesperson" type="text" placeholder="Enter name..." style="display:none;margin-top:6px;">
 
       <div class="modal-actions">
         <button class="btn-cancel" onclick="closeBookingModal()">Cancel</button>
@@ -746,6 +757,17 @@ async function saveToSheet(plotId, status, buyer, phone, bookingDate, scheme, ho
 // ══════════════════════════════════════════════════════════════════════════
 //  PHASE SWITCHING
 // ══════════════════════════════════════════════════════════════════════════
+function handleSalespersonSelect(val) {
+  const textInput = document.getElementById('modal-salesperson');
+  if (val === '__other__') {
+    textInput.style.display = 'block';
+    textInput.focus();
+  } else {
+    textInput.style.display = 'none';
+    textInput.value = '';
+  }
+}
+
 function switchPhase(ph) {
   currentPhase  = ph;
   currentFilter = 'all';
@@ -986,7 +1008,9 @@ function openBookingModal() {
   document.getElementById('modal-date').value        = new Date().toISOString().split('T')[0];
   document.getElementById('modal-scheme').value      = '';
   document.getElementById('modal-house').value       = '';
+  document.getElementById('modal-salesperson-select').value = '';
   document.getElementById('modal-salesperson').value = '';
+  document.getElementById('modal-salesperson').style.display = 'none';
   document.getElementById('btn-save').disabled      = false;
   document.getElementById('btn-save').textContent   = 'Save';
 
@@ -1020,7 +1044,10 @@ async function saveStatus() {
   const bookingDate = document.getElementById('modal-date').value;
   const scheme      = document.getElementById('modal-scheme').value;
   const houseOption = document.getElementById('modal-house').value;
-  const salesperson = document.getElementById('modal-salesperson').value.trim();
+  const spSelect    = document.getElementById('modal-salesperson-select').value;
+  const salesperson = (spSelect === '__other__' || spSelect === '')
+    ? document.getElementById('modal-salesperson').value.trim()
+    : spSelect;
 
   if (!buyer) {
     showToast('⚠️ Please enter the buyer name.', 'error');
@@ -1049,7 +1076,7 @@ async function saveStatus() {
   }
   if (!salesperson) {
     showToast('⚠️ Please enter the sales person name.', 'error');
-    document.getElementById('modal-salesperson').focus();
+    document.getElementById('modal-salesperson-select').focus();
     return;
   }
 
