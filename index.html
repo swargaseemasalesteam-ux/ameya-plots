@@ -397,7 +397,10 @@
     <button class="upf-btn f-avl" onclick="filterUpdates('available',this)">✅ Released</button>
   </div>
   <div class="upanel-feed" id="upanel-feed"></div>
-  <div class="upanel-footer">🔄 Auto-refreshes every 2 minutes</div>
+  <div class="upanel-footer">
+    🔄 Auto-refreshes every 2 minutes &nbsp;|&nbsp;
+    <button onclick="debugLog()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:10px;text-decoration:underline;">Debug</button>
+  </div>
 </div>
 
 <div class="summary-bar">
@@ -642,7 +645,7 @@
 // ══════════════════════════════════════════════════════════════════════════
 //  ⚙️  CONFIG — paste your Google Apps Script Web App URL here
 // ══════════════════════════════════════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxKPHX6MnCC9kkBxcELS_FZDOi9CretLYqpg4oZ4nOiMDJKce2sv14HMpdMXDD4lvu6/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxnOUus6nhBJT041C_XrxdCExnlVdg4uJ0_XvXTmdckcyFnG3jF93nJkfQFROSiMtKJ/exec';
 
 // ── Runtime state ──────────────────────────────────────────────────────────
 // plotDefs — built entirely from Google Sheet data on first load.
@@ -1122,16 +1125,50 @@ let todaysLog        = [];
 let updatesFilter    = 'all';
 let updatesPanelOpen = false;
 
+async function debugLog() {
+  const feed = document.getElementById('upanel-feed');
+  feed.innerHTML = '<div style="padding:10px;font-size:11px;color:#555;">Fetching debug info…</div>';
+  try {
+    // 1. Test debug endpoint
+    const r1   = await fetch(`${SCRIPT_URL}?action=debug`, { cache:'no-store' });
+    const t1   = await r1.text();
+    // 2. Test getLog endpoint
+    const r2   = await fetch(`${SCRIPT_URL}?action=getLog`, { cache:'no-store' });
+    const t2   = await r2.text();
+    feed.innerHTML = `
+      <div style="padding:10px;font-size:11px;font-family:monospace;word-break:break-all;">
+        <b style="color:#7B1A1A">?action=debug response:</b><br>
+        <span style="color:#333">${t1}</span>
+        <br><br>
+        <b style="color:#7B1A1A">?action=getLog response:</b><br>
+        <span style="color:#333">${t2}</span>
+      </div>`;
+  } catch(e) {
+    feed.innerHTML = `<div style="padding:10px;color:red;font-size:11px;">Error: ${e.message}</div>`;
+  }
+}
+
 async function loadTodaysLog() {
   try {
     const res  = await fetch(`${SCRIPT_URL}?action=getLog`, { cache: 'no-store' });
-    const data = await res.json();
+    const text = await res.text();
+    console.log('[TodaysLog raw]', text);
+    let data;
+    try { data = JSON.parse(text); } catch(pe) {
+      console.error('[TodaysLog parse error]', pe, text);
+      return;
+    }
+    console.log('[TodaysLog parsed]', data);
     if (Array.isArray(data)) {
       todaysLog = data;
       refreshUpdatesBadge();
       if (updatesPanelOpen) renderUpdatesFeed(updatesFilter);
+    } else {
+      console.warn('[TodaysLog] not an array:', data);
     }
-  } catch(e) { /* silently ignore log fetch errors */ }
+  } catch(e) {
+    console.error('[TodaysLog fetch error]', e);
+  }
 }
 
 function refreshUpdatesBadge() {
