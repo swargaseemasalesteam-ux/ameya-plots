@@ -1243,13 +1243,15 @@ function renderUpdatesFeed(filter) {
   const icons  = { sold:'🏠', reserved:'🔖', available:'✅' };
   const labels = { sold:'Sold', reserved:'Reserved', available:'Released to Available' };
   feed.innerHTML = items.map(e => {
-    const displayId = e.phase === 2 ? e.plotId - 144 : e.plotId;
+    const pid       = Number(e.plotId);
+    const ph        = Number(e.phase) || 1;
+    const displayId = ph === 2 ? pid - 144 : pid;
     return `<div class="feed-item fi-${e.status}">
       <div class="fi-icon">${icons[e.status]||'📋'}</div>
       <div class="fi-body">
         <div class="fi-title">Plot #${displayId} <span style="color:#aaa;font-weight:400">→</span> <span class="fi-status st-${e.status}">${labels[e.status]||e.status}</span></div>
         ${e.buyer ? `<div class="fi-sub">👤 ${e.buyer}${e.phone?' &nbsp;·&nbsp; 📞 '+e.phone:''}</div>`:''}
-        <div class="fi-meta">${e.salesperson?'👨‍💼 '+e.salesperson+' &nbsp;·&nbsp; ':''} Phase ${e.phase}</div>
+        <div class="fi-meta">${e.salesperson?'👨‍💼 '+e.salesperson+' &nbsp;·&nbsp; ':''} Phase ${ph}</div>
       </div>
       <div class="fi-time">🕐 ${e.time}</div>
     </div>`;
